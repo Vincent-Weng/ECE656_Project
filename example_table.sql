@@ -1,0 +1,13 @@
+drop table t1(c1 int);
+create table t1(c1 int);
+insert into t1 values (1);
+insert into t1 values (2);
+insert into t1 values (3);
+insert into t1 values (4);
+insert into t1 values (5);
+insert into t1 values (7);
+insert into t1 values (9);
+insert into t1 values (3);
+insert into t1 values (3);
+insert into t1 values (9);
+insert into t1 values (9);
