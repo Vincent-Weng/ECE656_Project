@@ -8,3 +8,16 @@ checkin, primary_key = id, foreign_key = business_id <- business.id
 category, primary_key = id, business_id <- business.id
 business, primary_key = id
 attribute, primary_key = id, business_id <- business.id
+
+How similar are users reviews and preferences?
+Check stars
+Check any other columns that are not forerign keys and are listed in at least 2 tables
+Check that no review is from the future or before Yelp's founding
+Can't be elite in a year before their account was made
+Can't leave a review dated before account creation
+Can't checkin outside open hours
+Have to use user to be friend (apparently not true)
+Can't have conflicting categories (~1300 categories total)
+User.number_reviews cannot be less than the sum of their reviews
+
+time between account creation and making a review correlation to spam chance
