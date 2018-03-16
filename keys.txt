@@ -1,0 +1,10 @@
+user, primary_key = id
+tip, primary_key = id, foreign_key = user_id <- user.id, business_id <- business.id
+review, primary_key = id, foreign_key = business_id <- business.id, user_id <- user.id
+hours, primary_key = id, foreign_key = business_id <- business.id
+friend, primary_key = id, foreign_key = user_id <- user.id, friend_id <- user.id
+elite_years, primary_key = id, foreign_key = user_id <- user.id
+checkin, primary_key = id, foreign_key = business_id <- business.id
+category, primary_key = id, business_id <- business.id
+business, primary_key = id
+attribute, primary_key = id, business_id <- business.id
