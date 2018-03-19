@@ -6,3 +6,4 @@
 *.gz
 *.aux
 *.log
+.ipynb_checkpoints/
