@@ -1,0 +1,9 @@
+
+.DS_Store
+*.fdb_latexmk
+*.fls
+*.pdf
+*.gz
+*.aux
+*.log
+.ipynb_checkpoints/
