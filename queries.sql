@@ -13,6 +13,7 @@ FROM
 WHERE
     date - yelping_since = 0
         AND review_count = 1;
+        
 SELECT 
     count(*)
 FROM
@@ -30,5 +31,17 @@ FROM
 WHERE
     a.opening_time < SUBSTRING_INDEX(checkin.date, '-', - 1)
         AND a.closing_time > SUBSTRING_INDEX(checkin.date, '-', - 1);
+        
 select count(*) from user join (select count(user_id) as countedReviews, user_id 
 from review group by user_id) as a on a.user_id = user.id where a.countedReviews - review_count != 0;
+
+select *
+from
+elite_years join
+(SELECT 
+    user_id, SUBSTRING_INDEX(date, '-', 1) AS year
+FROM
+    review) as a using(user_id, year)
+;
+
+select count(*) from review where substring_index(date, ' ', -1) != '00:00:00';
