@@ -11,6 +11,15 @@ Part I. Data preprocessing
         1.4 Analyze data 
         [ ] - Jupyter notebook: perform the processing
         [ ] - Use half of data to do the prediction, and verify it using the other half
+            - potentialSpamUser: 
+                - short ageBeforeReview
+                - revStar == 1 or 5, avgRevStar == 1 or 5
+                - revCount == 1
+                - `useful` and `funny` and `cool` == 0
+                - no fans
+            - potentialSpamBusiness:
+                - have many potentialSpamUser reviews
+                - high review `text` similarity
 
 Part II. Application privilege control
     [ ] 2.1 Analyze these groups of users, determine the least privilege they should be granted to use Yelp.
