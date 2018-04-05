@@ -35,13 +35,39 @@ WHERE
 select count(*) from user join (select count(user_id) as countedReviews, user_id 
 from review group by user_id) as a on a.user_id = user.id where a.countedReviews - review_count != 0;
 
-select *
-from
-elite_years join
-(SELECT 
-    user_id, SUBSTRING_INDEX(date, '-', 1) AS year
-FROM
-    review) as a using(user_id, year)
-;
+select count(*) from elite_years join
+(SELECT user_id, SUBSTRING_INDEX(date, '-', 1) AS year FROM review)
+as a on a.user_id=elite_years.user_id and a.year = elite_years.year
+group by elite_years.user_id, elite_years.year;
 
 select count(*) from review where substring_index(date, ' ', -1) != '00:00:00';
+
+create table hours_new(
+	id int(11) not null auto_increment, primary key (id)
+    ,business_id varchar(255)
+    ,day_of_week varchar(9)
+    ,opening_time time
+    ,closing_time time
+    );
+    
+drop procedure dowhile;
+delimiter //
+create procedure dowhile ()
+begin declare v1 int default 821044;
+while v1 > 0 do
+insert into hours_new(id) values (null);
+set v1 = v1 - 1;
+end while;
+end//
+delimiter ;
+
+call dowhile();
+
+update hours_new set day_of_week = (
+	select SUBSTRING_INDEX(hours, '|', 1) from hours where hours_new.id = hours.id);
+update hours_new set opening_time = (
+	select SUBSTRING_INDEX(SUBSTRING_INDEX(hours, '|', - 1), '-', 1) from hours where hours_new.id = hours.id);
+update hours_new set closing_time = (
+	select SUBSTRING_INDEX(SUBSTRING_INDEX(hours, '|', - 1), '-', - 1) from hours where hours_new.id = hours.id);
+update hours_new set business_id = (
+	select business_id from hours where hours_new.id = hours.id);
