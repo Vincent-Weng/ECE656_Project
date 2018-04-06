@@ -118,4 +118,3 @@ if __name__ == '__main__':
     s = s.sort_values(ascending=False)
     s.plot(kind='bar')
     plt.show()
-
