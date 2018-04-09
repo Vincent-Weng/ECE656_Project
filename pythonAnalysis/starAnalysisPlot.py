@@ -35,8 +35,9 @@ def close_conn(conn):
     conn.close()
 
 
-def executeQuery(conn, query, commit=False):
+def executeQuery(query, commit=False):
     """ fetch result after query"""
+    conn = open_conn()
     cursor = conn.cursor()
     query_num = query.count(";")
     if query_num > 1:
@@ -54,6 +55,7 @@ def executeQuery(conn, query, commit=False):
         conn.rollback()
     # close the cursor used to execute the query
     cursor.close()
+    close_conn(conn)
     return result
 
 
@@ -109,7 +111,6 @@ def groupValues(val_list: list):
     together and returns a list of lists"""
     val_list.sort()
     diff = [y - x for x, y in zip(*[iter(val_list)] * 2)]
-    pprint(diff)
     avg = sum(diff) / len(diff)
 
     m = [[val_list[0]]]
@@ -122,42 +123,79 @@ def groupValues(val_list: list):
     return m
 
 
-def groupKeys(val_list: list):
-    # sort the list of tuples by theiuri first val (the age of review since
+def split_by_stars(val_list):
+    output = [[] for _ in range(5)]
+    [output[val-1].append(age) for age, val in val_list]
+    return output
+
+
+def split_by_age(grouped_ages_by_stars):
+    i = 0
+    buckets = []
+    if grouped_ages_by_stars:
+        buckets.append([grouped_ages_by_stars[0]])
+    else:
+        return grouped_ages_by_stars
+    # Start for loop at 1 since first value was added already
+    for j in range(1, len(grouped_ages_by_stars)):
+        # get the lowest age and see if any values are within 5000000000 of it
+        if grouped_ages_by_stars[j] - buckets[i][0] > 5000000000:
+            # value too large, creates new bucket
+            i += 1
+            buckets.append([grouped_ages_by_stars[j]])
+        else:
+            # value within bucket size, add it
+            buckets[i].append(grouped_ages_by_stars[j])
+    return buckets
+
+
+def groupKeys(val_list):
+    # sort the list of tuples by their first val (the age of review since
     # when an account was opened)
     val_list.sort()
-    # get the lowest age and see if any values are within 8000000000 of it
-    curr_bucket = val_list[0][0]
-    buckets = [[val_list[0]]]
-    final_buckets = []
-    color = []
-    i = 0
-    for val in val_list:
-        if val[0] == curr_bucket:
-            continue
-        elif val[0] - curr_bucket < 5000000000:
-            buckets[i].append(val)
-        else:
-            curr_bucket = val[0]
-            buckets.append([val])
-            i = i + 1
+    final_buckets = [[] for _ in range(5)]
+    buckets = split_by_stars(val_list)
+    ages = set()
+    # determine frequency that star rating occurs on each age and normalize
+    # frequency for each age by dividing by the max frequency for that age
+    for star in range(5):
+        split_buckets = split_by_age(buckets[star])
+        for i in range(len(split_buckets)):
+            sum_age = sum(split_buckets[i])
+            count = len(split_buckets[i])
+            avg_age = int((sum_age/count) / 8872000000)
+            ages.add(avg_age)
+            final_buckets[star].append([avg_age, count])
+    # Add freq values of 0 to stars at an age that doesn't have a value
+    for star in range(5):
+        for _age in ages:
+            if _age not in [_avg_age for _avg_age, freq in final_buckets[star]]:
+                final_buckets[star].append([_age, 0])
+        final_buckets[star].sort()
+    # Normalize freq to 1
+    for i in range(len(final_buckets[0])):
+        max_freq = 0
+        for star in range(5):
+            if final_buckets[star][i][1] > max_freq:
+                max_freq = final_buckets[star][i][1]
+        for star in range(5):
+            final_buckets[star][i][1] /= max_freq
+    return final_buckets
 
-    for i in range(len(buckets)):
-        for val in range(1, 6):
-            count = 0
-            sum_age = 0
-            for age, tplVal in buckets[i]:
-                if tplVal == val:
-                    count = count + 1
-                    sum_age = sum_age + age
-            try:
-                avg_age = float(sum_age/(count*1000000000))
-                final_buckets.append((avg_age, val))
-                color.append(count)
-            except ZeroDivisionError:
-                continue
-    return final_buckets, color
 
+def grouped_bar_plot(grouped_ages):
+    fig, ax = plt.subplots()
+    width = 0.1
+    ind = [age for age, freq in grouped_ages[0]]
+    for i in range(5):
+        ax.bar([val + width*(i-1) for val in ind]
+               , [count for age, count in grouped_ages[i]]
+               , width
+               )
+    plt.xlabel('Age of comment (days)')
+    plt.ylabel('Freq')
+    plt.legend(('1 Star', '2 Star', '3 Star', '4 Star', '5 Star'))
+    plt.show()
 
 if __name__ == '__main__':
     query = 'SELECT date - yelping_since as age, stars FROM review JOIN user\
@@ -165,26 +203,9 @@ if __name__ == '__main__':
 
     # Warning, data is cached so changing query wont do anything unless cache
     # is cleared by deleting query_test.txt file or writing to a new file
-    #  reviews = fetchData(query, 'review_age')
-    conn = open_conn()
-    result = list(executeQuery(conn, query))
-    close_conn(conn)
-
-    grouped_ages, size = groupKeys(result)
-    ages_Dict = dict(grouped_ages)
-
-    # word_count = countWords(reviews, 10)
-    # trimmed_word_count = removeWords(word_count, 5)
-
+    # reviews = fetchData(query, 'review_age')
+    result = list(executeQuery(query))
+    grouped_ages = groupKeys(result)
     print('Finished counting words, displaying...')
-    #  s = pandas.DataFrame(list(resultDict.items()), columns=['Time', 'Stars'])
-    #  s.plot(kind='scatter')
-    x = ages_Dict.keys()
-    y = ages_Dict.values()
-    norm_size = max(size)/100
-    size = [size[i]/norm_size for i in range(len(size))]
-    print(size)
-    plt.scatter(x, y, s=size)
-    plt.xlabel('Age of comment')
-    plt.ylabel('Stars')
-    plt.show()
+    grouped_bar_plot(grouped_ages)
+
