@@ -1,14 +1,16 @@
-"""Display settings"""
 from IPython.display import HTML, display
 import tabulate
 import pymysql
 import matplotlib.pyplot as plt
 import pandas
+import io
 from collections import Counter
 from collections import OrderedDict
 from pprint import pprint
 
+encoding = 'utf-8'
 
+"""Display settings"""
 def displayResult(queryResult, heading=()):
     if heading != ():
         resultList = (heading,) + queryResult
@@ -61,8 +63,8 @@ def fetchData(query, fileName):
     # Fetches the data from the SQL database and write the output to a text
     # file to open later to save time if were repeating the same queries
     try:
-        reviews = open('%s.txt'
-                       % fileName, 'r')
+        reviews = io.open('%s.txt'
+                       % fileName, 'r', encoding=encoding)
     except FileNotFoundError:
         # fetch results from the database
         conn = open_conn()
@@ -70,12 +72,13 @@ def fetchData(query, fileName):
         result = executeQuery(conn, query)
         # retreive results as a list from the list of tuples
         result_list = [row[0] for row in result]
-        output_file = open('%s.txt'
-                           % fileName, 'w')
-        [output_file.write(review) for review in result_list]
+        output_file = io.open('%s.txt'
+                           % fileName, 'w', encoding=encoding)
+        for review in result_list:
+            output_file.write(review) 
         output_file.close()
-        reviews = open('%s.txt'
-                       % fileName, 'r')
+        reviews = io.open('%s.txt'
+                       % fileName, 'r', encoding=encoding)
         # close connection to the database
         close_conn(conn)
     return reviews
@@ -117,4 +120,4 @@ if __name__ == '__main__':
     s = pandas.Series(trimmed_word_count)
     s = s.sort_values(ascending=False)
     s.plot(kind='bar')
-    plt.show()
+    plt.savefig("keyword_plot.pdf", format="pdf")
