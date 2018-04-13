@@ -2,7 +2,7 @@ from IPython.display import HTML, display
 import tabulate
 import pymysql
 import io
-from collections import Counter
+
 
 encoding = 'utf-8'
 

@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas
 from project_funclib import *
+from collections import Counter
 
 
 def countWords(textFile, numReviews):
