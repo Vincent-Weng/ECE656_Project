@@ -7,3 +7,5 @@
 *.aux
 *.log
 .ipynb_checkpoints/
+pythonAnalysis/.idea
+pythonAnalysis/__pycache__
