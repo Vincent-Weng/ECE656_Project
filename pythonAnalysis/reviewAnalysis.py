@@ -61,7 +61,7 @@ def fetchData(query, fileName):
     # Fetches the data from the SQL database and write the output to a text
     # file to open later to save time if were repeating the same queries
     try:
-        reviews = open('/home/josh/Documents/python/yelp-challenge/%s.txt'
+        reviews = open('%s.txt'
                        % fileName, 'r')
     except FileNotFoundError:
         # fetch results from the database
@@ -70,11 +70,11 @@ def fetchData(query, fileName):
         result = executeQuery(conn, query)
         # retreive results as a list from the list of tuples
         result_list = [row[0] for row in result]
-        output_file = open('/home/josh/Documents/python/yelp-challenge/%s.txt'
+        output_file = open('%s.txt'
                            % fileName, 'w')
         [output_file.write(review) for review in result_list]
         output_file.close()
-        reviews = open('/home/josh/Documents/python/yelp-challenge/%s.txt'
+        reviews = open('%s.txt'
                        % fileName, 'r')
         # close connection to the database
         close_conn(conn)
