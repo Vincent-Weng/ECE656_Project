@@ -86,4 +86,4 @@ if __name__ == '__main__':
     plt.scatter(x, y, s=size)
     plt.xlabel('Age of comment')
     plt.ylabel('Stars')
-    plt.show()
+    plt.savefig("star_plot.pdf", format="pdf")

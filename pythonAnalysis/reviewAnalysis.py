@@ -2,6 +2,28 @@ import matplotlib.pyplot as plt
 import pandas
 from project_funclib import *
 
+
+def countWords(textFile, numReviews):
+    # Takes in a text file and returns a Counter object which contains
+    # each word and the number of times it appears in the reviews
+    word_counts = Counter()
+    i = 0
+    while i < numReviews:
+        review = textFile.readline()
+        if review is not '':
+            word_counts = word_counts + Counter(review.split())
+        i = i + 1
+    return word_counts
+
+
+def removeWords(word_counts, threshold):
+    # Clearing key-value pairs that don't pass a threshold
+    for key in list(word_counts):
+        if word_counts[key] < threshold:
+            del word_counts[key]
+    return word_counts
+
+
 if __name__ == '__main__':
     query = 'SELECT text FROM review JOIN user ON user.id=review.user_id\
             WHERE date = yelping_since AND review_count = 1 AND review.useful = 0\
