@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas
-from project_funclib import *
+import project_funclib
 from collections import Counter
 
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
             AND review.funny = 0 AND review.cool = 0;'
     # Warning, data is cached so changing query wont do anything unless cache
     # is cleared by deleting query_test.txt file or writing to a new file
-    reviews = fetchData(query, 'query_text')
+    reviews = project_funclib.fetchData(query, 'query_text')
 
     word_count = countWords(reviews, 10)
     trimmed_word_count = removeWords(word_count, 5)

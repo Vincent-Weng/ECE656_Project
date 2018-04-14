@@ -33,8 +33,9 @@ def close_conn(conn):
     conn.close()
 
 
-def executeQuery(conn, query, commit=False):
+def executeQuery(query, commit=False):
     """ fetch result after query"""
+    conn = open_conn()
     cursor = conn.cursor()
     query_num = query.count(";")
     if query_num > 1:
@@ -52,6 +53,7 @@ def executeQuery(conn, query, commit=False):
         conn.rollback()
     # close the cursor used to execute the query
     cursor.close()
+    close_conn(conn)
     return result
 
 
@@ -78,6 +80,3 @@ def fetchData(query, fileName):
         # close connection to the database
         close_conn(conn)
     return reviews
-
-
-
