@@ -7,6 +7,7 @@ import pymysql
 from pandas import DataFrame
 from pprint import pprint
 import pickle
+from random import shuffle
 
 
 def open_conn():
@@ -50,34 +51,70 @@ def data_frame_from_directory(query, classification):
     rows = []
     for message in executeQuery(query):
         trimmed_message = message[0].replace('\n', ' ')
-        pprint(trimmed_message)
         rows.append({'message': trimmed_message, 'class': classification})
-    return DataFrame(rows)
+    return rows
 
 
-data = DataFrame({'message': [], 'class': []})
-query = 'SELECT text as age FROM review JOIN user\
-         ON user.id=review.user_id WHERE review_count = 1 limit 100'
-data.append(data_frame_from_directory(query, '1'))
-query = 'SELECT text as age FROM review JOIN user\
-         ON user.id=review.user_id WHERE review_count > 10 limit 100'
-data.append(data_frame_from_directory(query, '0'))
+def find_features(review, frequent_words):
+    '''Find the which words in the review are contained within the word_features\
+    what were determined from the movie review dataset'''
+    words = review.split()
+    features = {}
+    for word in frequent_words:
+        features[word] = (word in words)
+    return features
+
+
+def is_adj_or_adv(pos): return pos[:2].startswith(("J", "R"))
+
+
+#  data = DataFrame({'message': [], 'class': []})
+documents = []
+all_words = []
+spam_query = 'SELECT text FROM review JOIN user\
+         ON user.id=review.user_id WHERE review_count = 1 limit 10000'
+#  data.append(data_frame_from_directory(query, '1'))
+ham_query = 'SELECT text FROM review JOIN user\
+         ON user.id=review.user_id WHERE review_count > 10 limit 10000'
+#  data.append(data_frame_from_directory(query, '0'))
+for review in executeQuery(spam_query):
+    text = review[0]
+    documents.append((text, "spam"))
+    words = nltk.tokenize.word_tokenize(text)
+    POS = nltk.pos_tag(words)
+    [all_words.append(w[0].lower()) for w in POS if is_adj_or_adv(w[1])]
+for review in executeQuery(spam_query):
+    text = review[0]
+    documents.append((text, "ham"))
+    words = nltk.tokenize.word_tokenize(text)
+    POS = nltk.pos_tag(words)
+    [all_words.append(w[0].lower()) for w in POS if is_adj_or_adv(w[1])]
+all_words = nltk.FreqDist(all_words)
+word_features = list(all_words.keys())[:1000]
+feature_sets = [(find_features(review, word_features), category) for
+                (review, category) in documents]
+shuffle(feature_sets)
+len_data = int(len(feature_sets) * 0.7)
+training_set = feature_sets[:len_data]
+testing_set = feature_sets[len_data:]
+
+
 with open('/home/josh/Documents/python/tensorflow/yelp/pickles/spamText.pickle'
           , 'wb') as dataset_pkl:
-    pickle.dump(data, dataset_pkl)
+    pickle.dump(feature_sets, dataset_pkl)
 #  with open('/home/josh/Documents/python/tensorflow/yelp/pickles/spamText.pickle'
 #            , 'rb') as dataset_pkl:
 #      data = pickle.load(dataset_pkl)
 
-vectorizer = CountVectorizer()
-counts = vectorizer.fit_transform(data['message'].values)
-classifier = MultinomialNB()
-targets = data['class'].values
-classifier.fit(counts, targets)
-examples = ['Free viagra now!!!', 'Hi Bob, how about a game of golf tomorrow?']
-example_counts = vectorizer.transform(examples)
-predictions = classifier.predict(example_counts)
-print(predictions)
+#  vectorizer = CountVectorizer()
+#  counts = vectorizer.fit_transform(data['message'].values)
+#  targets = data['class'].values
+#  classifier.fit(counts, targets)
+#  example_counts = vectorizer.transform(examples)
+#  predictions = classifier.predict(example_counts)
+classifier = nltk.NaiveBayesClassifier.train(training_set)
+classifier.show_most_informative_features(5)
+print(nltk.classify.accuracy(classifier, testing_set))
 
 
 #  # runs once on training data

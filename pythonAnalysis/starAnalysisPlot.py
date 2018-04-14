@@ -1,12 +1,6 @@
-"""Display settings"""
-from IPython.display import HTML, display
-import tabulate
-import pymysql
 import matplotlib.pyplot as plt
-import pandas
-from collections import Counter
-from collections import OrderedDict
 from pprint import pprint
+<<<<<<< HEAD
 
 
 def displayResult(queryResult, heading=()):
@@ -104,6 +98,9 @@ def removeWords(word_counts, threshold):
         if word_counts[key] < threshold:
             del word_counts[key]
     return word_counts
+=======
+from project_funclib import *
+>>>>>>> 8837dfd2816c2ba36fdc158809a336d26c1025ba
 
 
 def groupValues(val_list: list):
@@ -207,5 +204,19 @@ if __name__ == '__main__':
     result = list(executeQuery(query))
     grouped_ages = groupKeys(result)
     print('Finished counting words, displaying...')
+<<<<<<< HEAD
     grouped_bar_plot(grouped_ages)
 
+=======
+    #  s = pandas.DataFrame(list(resultDict.items()), columns=['Time', 'Stars'])
+    #  s.plot(kind='scatter')
+    x = ages_Dict.keys()
+    y = ages_Dict.values()
+    norm_size = max(size)/100
+    size = [size[i]/norm_size for i in range(len(size))]
+    print(size)
+    plt.scatter(x, y, s=size)
+    plt.xlabel('Age of comment')
+    plt.ylabel('Stars')
+    plt.savefig("star_plot.pdf", format="pdf")
+>>>>>>> 8837dfd2816c2ba36fdc158809a336d26c1025ba
