@@ -1,82 +1,9 @@
+import project_funclib
+
+import os
 import matplotlib.pyplot as plt
 from pprint import pprint
-<<<<<<< HEAD
-
-
-def displayResult(queryResult, heading=()):
-    if heading != ():
-        resultList = (heading,) + queryResult
-        display(HTML(tabulate.tabulate(
-            [result for result in resultList], tablefmt='html')))
-    else:
-        display(HTML(tabulate.tabulate(
-            [result for result in queryResult], tablefmt='html')))
-
-
-"""MySQL connection related functions and variables"""
-
-
-def open_conn():
-    """open the connection before each test case"""
-    conn = pymysql.connect(user='public', password='ece656yelp',
-                           host='maindb.czbva1am4d4u.us-east-2.rds.amazonaws.com',
-                           database='yelp_db')
-    return conn
-
-
-def close_conn(conn):
-    """close the connection after each test case"""
-    conn.close()
-
-
-def executeQuery(query, commit=False):
-    """ fetch result after query"""
-    conn = open_conn()
-    cursor = conn.cursor()
-    query_num = query.count(";")
-    if query_num > 1:
-        for result in cursor.execute(query, params=None, multi=True):
-            if result.with_rows:
-                result = result.fetchall()
-    else:
-        cursor.execute(query)
-        result = cursor.fetchall()
-    # we commit the results only if we want the updates to the database
-    # to persist.
-    if commit:
-        conn.commit()
-    else:
-        conn.rollback()
-    # close the cursor used to execute the query
-    cursor.close()
-    close_conn(conn)
-    return result
-
-
-def fetchData(query, fileName):
-    # Fetches the data from the SQL database and write the output to a text
-    # file to open later to save time if were repeating the same queries
-    try:
-        reviews = open('/home/josh/Documents/python/yelp-challenge/%s.txt'
-                       % fileName, 'r')
-        if(reviews.read() == ''):
-            raise FileNotFoundError
-    except FileNotFoundError:
-        # fetch results from the database
-        conn = open_conn()
-        print('query not found, fetching...')
-        result = executeQuery(conn, query)
-        # retreive results as a list from the list of tuples
-        #  result_list = [row[0] for row in result]
-        result_list = result
-        with open('/home/josh/Documents/python/yelp-challenge/%s.txt'
-                % fileName, 'w') as output_file:
-            [output_file.write(result) for result in result_list]
-        reviews = open('/home/josh/Documents/python/yelp-challenge/%s.txt'
-                       % fileName, 'r')
-        # close connection to the database
-        close_conn(conn)
-    return reviews
+from collections import Counter
 
 
 def countWords(textFile, numReviews):
@@ -98,9 +25,6 @@ def removeWords(word_counts, threshold):
         if word_counts[key] < threshold:
             del word_counts[key]
     return word_counts
-=======
-from project_funclib import *
->>>>>>> 8837dfd2816c2ba36fdc158809a336d26c1025ba
 
 
 def groupValues(val_list: list):
@@ -192,31 +116,15 @@ def grouped_bar_plot(grouped_ages):
     plt.xlabel('Age of comment (days)')
     plt.ylabel('Freq')
     plt.legend(('1 Star', '2 Star', '3 Star', '4 Star', '5 Star'))
+    plt.savefig("star_plot.pdf", format="pdf")
     plt.show()
+
 
 if __name__ == '__main__':
     query = 'SELECT date - yelping_since as age, stars FROM review JOIN user\
             ON user.id=review.user_id limit 100000'
-
     # Warning, data is cached so changing query wont do anything unless cache
     # is cleared by deleting query_test.txt file or writing to a new file
-    # reviews = fetchData(query, 'review_age')
-    result = list(executeQuery(query))
+    result = list(project_funclib.executeQuery(query))
     grouped_ages = groupKeys(result)
-    print('Finished counting words, displaying...')
-<<<<<<< HEAD
     grouped_bar_plot(grouped_ages)
-
-=======
-    #  s = pandas.DataFrame(list(resultDict.items()), columns=['Time', 'Stars'])
-    #  s.plot(kind='scatter')
-    x = ages_Dict.keys()
-    y = ages_Dict.values()
-    norm_size = max(size)/100
-    size = [size[i]/norm_size for i in range(len(size))]
-    print(size)
-    plt.scatter(x, y, s=size)
-    plt.xlabel('Age of comment')
-    plt.ylabel('Stars')
-    plt.savefig("star_plot.pdf", format="pdf")
->>>>>>> 8837dfd2816c2ba36fdc158809a336d26c1025ba

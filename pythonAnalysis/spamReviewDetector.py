@@ -2,6 +2,7 @@ import project_funclib
 
 import nltk
 import pickle
+from matplotlib import pyplot
 from random import shuffle
 from pprint import pprint
 
@@ -85,18 +86,9 @@ def build_rf_feature_set(spam_query, ham_query):
 
 def naive_bayes_classifier(training_set, testing_set):
     classifier = nltk.NaiveBayesClassifier.train(training_set)
-    print(nltk.classify.accuracy(classifier, testing_set))
-    classifier.show_most_informative_features(15)
-
-
-def gaussianNB_classifier(X_train, X_test, y_train, y_test):
-    gaussian_nb_classifier = GaussianNB()
-    gaussian_nb_classifier.fit(X_train, y_train)
-    pred = gaussian_nb_classifier.predict(X_test)
-    print('gaussianNB Accuracy score: {}'.format(accuracy_score(y_test, pred)))
-    print('gaussianNB Precision score: {}'.format(precision_score(y_test, pred)))
-    print('gaussianNB Recall score: {}'.format(recall_score(y_test, pred)))
-    print('gaussianNB F1 score: {}'.format(f1_score(y_test, pred)))
+    accuracy = nltk.classify.accuracy(classifier, testing_set)
+    #  classifier.show_most_informative_features(15)
+    return accuracy
 
 
 def random_forest_classifier(X_train, X_test, y_train, y_test):
@@ -105,29 +97,69 @@ def random_forest_classifier(X_train, X_test, y_train, y_test):
     predRF = classifier1.predict(X_test)
     print('RF Accuracy score: {}'.format(accuracy_score(y_test, predRF)))
     print('RF Precision score: {}'.format(precision_score(y_test, predRF)))
-    print('RF Recall score: {}'.format(recall_score(y_test, predRF)))
-    print('RF F1 score: {}'.format(f1_score(y_test, predRF)))
+    #  print('RF Recall score: {}'.format(recall_score(y_test, predRF)))
+    #  print('RF F1 score: {}'.format(f1_score(y_test, predRF)))
 
+
+def train_classifiers(category, ages, num_results, num_reviews):
+    spam_query = "SELECT text FROM (SELECT text, business_id, user_id, date from review \
+            WHERE useful = 0 AND funny = 0 AND cool = 0) as c JOIN\
+            (SELECT id, yelping_since from user where average_stars = (5 or 1) AND review_count = 1)\
+            AS a ON a.id=c.user_id JOIN (select business_id from category WHERE\
+            category = '%s') as b USING(business_id) WHERE\
+            c.date - a.yelping_since BETWEEN %d and %d limit %d;"\
+            % (category, ages[0]*10000000000, ages[1]*10000000000, num_results)
+    ham_query = "SELECT text FROM review JOIN (select id from user where\
+            review_count > %d) as a ON a.id=review.user_id JOIN (SELECT\
+            business_id from category where category='%s') as b on\
+            review.business_id=b.business_id limit %d" % (num_reviews, category, num_results)
+
+    feature_sets = build_feature_set(spam_query, ham_query)
+    len_data = int(len(feature_sets) * 0.7)
+    training_set = feature_sets[:len_data]
+    testing_set = feature_sets[len_data:]
+    return naive_bayes_classifier(training_set, testing_set)
+
+    #  x, y = build_rf_feature_set(spam_query, ham_query)
+    #  X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.30)
+    #  random_forest_classifier(X_train, X_test, y_train, y_test)
 
 num_results = 1000
+age = (0, 0)
+category = 'Restaurants'  # , 'Health & Medical', 'Shopping'
 num_reviews = 10
-age = 0
 
-spam_query = 'SELECT text FROM review JOIN user\
-         ON user.id=review.user_id WHERE review_count = 1\
-         AND review.useful = 0 AND review.funny = 0 AND review.cool = 0\
-         AND review.date - yelping_since = %d and (average_stars = 1 or\
-         average_stars = 5) limit %d;' % (age, num_results)
-ham_query = 'SELECT text FROM review JOIN user\
-         ON user.id=review.user_id WHERE review_count > %d limit %d' % (num_reviews, num_results)
+#  accuracy = []
+#  for num_reviews in range(0, 101, 10):
+#      accuracy.append(train_classifiers(category, age, num_results, num_reviews))
 
-#  feature_sets = build_feature_set(spam_query, ham_query)
-#  len_data = int(len(feature_sets) * 0.7)
-#  training_set = feature_sets[:len_data]
-#  testing_set = feature_sets[len_data:]
-#  naive_bayes_classifier(training_set, testing_set)
+#  pyplot.figure(1)
+#  pyplot.plot(range(0, 101, 10), accuracy)
+#  pyplot.xlabel('review_count by User')
+#  pyplot.ylabel('Spam Detection Accuracy')
 
-x, y = build_rf_feature_set(spam_query, ham_query)
-X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.30)
-gaussianNB_classifier(X_train, X_test, y_train, y_test)
-random_forest_classifier(X_train, X_test, y_train, y_test)
+accuracy = []
+ages_high = [0]
+ages_low = [0]
+[ages_high.append(i) for i in range(11)]
+[ages_low.append(i) for i in range(1, 12)]
+for age_low, age_high in zip(ages_low, ages_high):
+    ages = (age_low, age_high)
+    accuracy.append(train_classifiers(category, ages, num_results, num_reviews))
+
+pyplot.figure(2)
+pyplot.plot([(i,j) for i, j in zip(ages_low, ages_high)], accuracy)
+pyplot.xlabel('Time Between Account Creation and First Review (days)')
+pyplot.ylabel('Spam Detection Accuracy')
+
+#  accuracy = []
+#  categories = ['Restaurants', 'Health & Medical', 'Shopping', 'Beauty & Spas',
+#                'Home Services', 'Nightlife', 'Automotive']
+#  for category in categories:
+#      accuracy.append(train_classifiers(category, age, num_results, num_reviews))
+
+#  pyplot.figure(3)
+#  pyplot.plot(categories, accuracy)
+#  pyplot.xlabel('Business Category')
+#  pyplot.ylabel('Spam Detection Accuracy')
+pyplot.show()
