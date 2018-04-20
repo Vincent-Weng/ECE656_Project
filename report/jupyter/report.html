@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>report</title>
+
+
+<style type="text/css">
+@font-face {
+    font-family: 'CM';
+    src: local('CMU Serif')
+}
+*{margin:0;padding:0;}
+body {
+	font:18px Helvetica;
+	color:black;
+	line-height:1.3em;
+	background-color: #F8F8F8;
+	padding: 0.7em;
+}
+p {
+	margin:1em 0;
+	line-height:1.5em;
+}
+table {
+	font-size:inherit;
+	font:100%;
+	margin:1em;
+}
+table th{border-bottom:1px solid #bbb;padding:.2em 1em;}
+table td{border-bottom:1px solid #ddd;padding:.2em 1em;}
+input[type=text],input[type=password],input[type=image],textarea{font:99% helvetica,arial,freesans,sans-serif;}
+select,option{padding:0 .25em;}
+optgroup{margin-top:.5em;}
+pre,code{font:12px Monaco,"Courier New","DejaVu Sans Mono","Bitstream Vera Sans Mono",monospace;}
+pre {
+	margin:1em 0;
+	font-size:12px;
+	background-color:#eee;
+	border:1px solid #ddd;
+	padding:5px;
+	line-height:1.5em;
+	color:#444;
+	overflow:auto;
+	-webkit-box-shadow:rgba(0,0,0,0.07) 0 1px 2px inset;
+	-webkit-border-radius:3px;
+	-moz-border-radius:3px;border-radius:3px;
+}
+pre code {
+	padding:0;
+	font-size:12px;
+	background-color:#eee;
+	border:none;
+}
+code {
+	font-size:12px;
+	background-color:#f8f8ff;
+	color:#444;
+	padding:0 .2em;
+	border:1px solid #dedede;
+}
+img{border:0;max-width:100%;}
+abbr{border-bottom:none;}
+a{color:#4183c4;text-decoration:none;}
+a:hover{text-decoration:underline;}
+a code,a:link code,a:visited code{color:#4183c4;}
+h2,h3{margin:1em 0;}
+h1,h2,h3,h4,h5,h6{border:0;}
+h1{font-size:170%;border-top:4px solid #aaa;padding-top:.5em;margin-top:1.5em;}
+h1:first-child{margin-top:0;padding-top:.25em;border-top:none;}
+h2{font-size:150%;margin-top:1.5em;border-top:4px solid #e0e0e0;padding-top:.5em;}
+h3{margin-top:1em;}
+hr{border:1px solid #ddd;}
+ul{margin:1em 0 1em 2em;}
+ol{margin:1em 0 1em 2em;}
+ul li,ol li{margin-top:.5em;margin-bottom:.5em;}
+ul ul,ul ol,ol ol,ol ul{margin-top:0;margin-bottom:0;}
+blockquote{margin:1em 0;border-left:5px solid #ddd;padding-left:.6em;color:#555;}
+dt{font-weight:bold;margin-left:1em;}
+dd{margin-left:2em;margin-bottom:1em;}
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+kbd {
+  display: inline-block;padding: 3px 5px;font-size: 11px;line-height: 10px;color: #555;vertical-align: middle;background-color: #fcfcfc;border: solid 1px #ccc;border-bottom-color: #bbb;border-radius: 3px;box-shadow: inset 0 -1px 0 #bbb;
+}
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:0 auto;
+    }
+}
+@media print {
+	table, pre {
+		page-break-inside: avoid;
+	}
+	pre {
+		word-wrap: break-word;
+	}
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h2 id="toc_0">Part 0. General settings</h2>
+
+<p>This report is written in Jupyter Notebook, and all SQL queries are exectuted as python script. Therefore, it follows the sequence of code executing, and all codes share the same namespace. </p>
+
+<p>Comparison between the run time with and without indexes/keys is integrated with cleaning/analysis part after each queries are executed.</p>
+
+<p>The database server is set up on Amazon Web Service (AWS). The address and other related information can be found below.</p>
+
+<p>Here are the general scripts used through the whole project:</p>
+
+<div><pre><code class="language-python">&quot;&quot;&quot;Display settings&quot;&quot;&quot;
+from IPython.display import HTML, display
+import tabulate
+
+# optional `heading` arg. If provided it will be added to the first row as the table heading.
+def displayResult(queryResult, heading=()):
+    if heading != ():
+        resultList = (heading,) + queryResult
+        display(HTML(tabulate.tabulate([result for result in resultList], tablefmt=&#39;html&#39;)))
+    else:
+        display(HTML(tabulate.tabulate([result for result in queryResult], tablefmt=&#39;html&#39;)))
+
+&quot;&quot;&quot;MySQL connection related functions and variables&quot;&quot;&quot;
+
+import pymysql
+
+def open_conn():
+    &quot;&quot;&quot;open the connection before each test case&quot;&quot;&quot;
+    conn = pymysql.connect(user=&#39;public&#39;, password=&#39;ece656yelp&#39;,
+                                   host=&#39;maindb.czbva1am4d4u.us-east-2.rds.amazonaws.com&#39;,
+                                   database=&#39;yelp_db&#39;)
+    return conn
+
+def close_conn(conn):
+    &quot;&quot;&quot;close the connection after each test case&quot;&quot;&quot;
+    conn.close()
+
+def executeQuery(conn, query, commit=False, returnResult=True):
+    &quot;&quot;&quot; fetch result after query&quot;&quot;&quot;
+    cursor = conn.cursor()
+    query_num = query.count(&quot;;&quot;)
+    if query_num &gt; 1:
+        if not returnResult:
+            cursor.execute(query)
+            return
+        else:
+            for result in cursor.execute(query, params=None, multi=True):
+                if result.with_rows:
+                    result = result.fetchall()
+    else:
+        cursor.execute(query)
+        result = cursor.fetchall()
+    # we commit the results only if we want the updates to the database
+    # to persist.
+    if commit:
+        conn.commit()
+    else:
+        conn.rollback()
+    # close the cursor used to execute the query
+    cursor.close()
+    return result
+
+yelp_conn = open_conn()</code></pre></div>
+
+<h2 id="toc_1">Part I - 1.1 Database structure</h2>
+
+<p>Here is the Entity-Relationship diagram of the database. The attributes are not shown because there are too many for some of the tables. Instead, they can be find in the following figure illustrating the relational model.
+<div style="text-align:center">
+<img src="../../ER_Diagram.png" width="800">
+</div></p>
+
+<p>Here is the relational model of the database. Primary keys are marked as orange and foreign keys are marked as blue. Also the arrows indicate the reference relations between the tables.</p>
+
+<div style="text-align:center">
+<img src="../../RelationalModel.png" width="800">
+</div>
+
+<h2 id="toc_2">Part I - 1.2 Data cleaning</h2>
+
+<p>First some sanity checks and consistency checks were performed on the yelp database. The data in the database should follow rules and should be consistent with each other. After studying the relationship models in of it, we perfomed the following checks and cleaning:
+- Logical time checks: review or becoming an elite member can not occur before yelp was founded or from the future. 
+- Logic consistency checks: a user can not leave a review before creating the account, a user can not become an elite member before becoming a yelp user, people should not check in at a business outside open hours, and the reviews written by each user should be in consistent with that in the user table.</p>
+
+<p>We first got the queries ready, then came up with the following indices to accelerate the running of queries. As we are going to time the execution commands, they are added before further discussion, as shown in 1.2.1. After that in 1.2.2, we will introduce the checking queries and the measures taken to deal with the inconsistency and broken data. </p>
+
+<h3 id="toc_3">1.2.1 Indexing the sanity check queries</h3>
+
+<p>To allow for faster queries additional indices were added to some tables in the database. This includes:</p>
+
+<ul>
+<li>adding one to the year column in the table elite<em>years to speed up query</em>6
+
+<ul>
+<li>create index idx<em>year on elite</em>years(year)</li>
+</ul></li>
+<li>adding one to the yelping_since column in the user table
+
+<ul>
+<li>create index idx<em>yelping</em>since on user(yelping_since)</li>
+</ul></li>
+<li>creating new columns in the hours table to split the hours column into date, opening<em>time and closing</em>time and creating an index for each of these
+
+<ul>
+<li>create index idx<em>day</em>of<em>week on hours(day</em>of_week)</li>
+</ul></li>
+<li>creating new columns in the checkin table to split the date column into date<em>of</em>week and time and creating an index for each of these
+
+<ul>
+<li>create index idx<em>day</em>of<em>week on hours(day</em>of_week)</li>
+</ul></li>
+<li>creating new columns in the review table to split the date column into year, month, day columns and scrapping the time because its always 00:00:00
+
+<ul>
+<li>select count(*) from review where substring_index(date, &#39; &#39;, -1) != &#39;00:00:00&#39;; #returns 0</li>
+</ul></li>
+</ul>
+
+<div><pre><code class="language-python">index_1_1 = &quot;create index idx_year on elite_years(year);&quot;
+index_1_2 = &quot;create index idx_yelping_since on user(yelping_since);&quot;
+
+executeQuery(yelp_conn, index_1_1, returnResult=False)
+executeQuery(yelp_conn, index_1_2, returnResult=False)</code></pre></div>
+
+<div><pre><code class="language-none">()</code></pre></div>
+
+<p><code>index2</code> is too long to execute here. It uses a procedure to create a new <code>hour</code> table with openning and closing time as seperate columns, so we do not need to parse the time column to retrieve the openning and closing tome. In fact, we think it is a bad practice in the original database to put these two in the same columnn as it violates 1NF.
+<code>index3</code> as shown below, creates indexes for this new table:</p>
+
+<div><pre><code class="language-python">index_3_1 = &quot;create index idx_day_of_week on hours_new(day_of_week);&quot;
+index_3_2 = &quot;create index idx_opening_time on hours_new(opening_time);&quot;
+index_3_3 = &quot;create index idx_closing_time on hours_new(closing_time);&quot;
+executeQuery(yelp_conn, index_3_1, returnResult=False)
+executeQuery(yelp_conn, index_3_2, returnResult=False)
+executeQuery(yelp_conn, index_3_3, returnResult=False)</code></pre></div>
+
+<div><pre><code class="language-none">()</code></pre></div>
+
+<p>Again, <code>index4</code> creates a new table based on checkin table which creates seperated columns for time digits.</p>
+
+<p>This <code>index5</code> series, create the indexes for the new check_in table:</p>
+
+<div><pre><code class="language-python">index_5_1 =  &quot;create index idx_day_of_week on checkin_new(day_of_week)&quot;
+index_5_2 =  &quot;create index idx_opening_time on checkin_new(checkin_time)&quot;
+executeQuery(yelp_conn, query_5_1)
+executeQuery(yelp_conn, query_5_2)</code></pre></div>
+
+<h3 id="toc_4">1.2.2 Sanity/consistency check and cleaning</h3>
+
+<h4 id="toc_5">1. Check that no review is from the future or before Yelp&#39;s founding</h4>
+
+<div><pre><code class="language-python">query_1 = &quot;SELECT id, date FROM review WHERE unix_timestamp(date) &lt;= unix_timestamp(&#39;2004-10-01&#39;)\
+           OR unix_timestamp(date) &gt;= unix_timestamp(&#39;2018-01-01&#39;);&quot;
+
+%time result_1 = executeQuery(yelp_conn, query_1)
+
+result_1</code></pre></div>
+
+<div><pre><code class="language-none">CPU times: user 1.85 ms, sys: 2.5 ms, total: 4.36 ms
+Wall time: 2.75 s
+
+((&#39;03B9-gqbeGoMmPJbNzNT5w&#39;, datetime.datetime(2004, 9, 15, 0, 0)),
+ (&#39;PbIY2aIyszb6he6J-ey67w&#39;, datetime.datetime(2004, 7, 22, 0, 0)))</code></pre></div>
+
+<p>This shows 2 accounts that were created before Yelp&#39;s founding in October 2004.</p>
+
+<p><strong>Timing analysis:</strong> As shown in the result the query runs in about 3 seconds as shown in the output. When we delete the keys and indexes, the out put is like this:</p>
+
+<div><pre><code class="language-python">Wall time: 15.292s</code></pre></div>
+
+<p>Therefore the keys and indexes bring about 5 times improvement in running speed.</p>
+
+<p>This query deletes the illegel records:</p>
+
+<div><pre><code class="language-python">clean_1 = &quot;DELETE FROM review WHERE unix_timestamp(date) &lt;= unix_timestamp(&#39;2004-10-01&#39;)\
+           OR unix_timestamp(date) &gt;= unix_timestamp(&#39;2018-01-01&#39;);&quot;
+
+executeQuery(yelp_conn, clean_1)</code></pre></div>
+
+<h4 id="toc_6">2. Can&#39;t leave a review dated before account creation</h4>
+
+<div><pre><code class="language-python">query_2 =  &quot;SELECT user.id, user.yelping_since, review.date\
+            FROM (user INNER JOIN review ON user.id = review.user_id)\
+            WHERE user.yelping_since &gt; review.date\
+            GROUP BY user.id;&quot;
+
+%time result_2 = executeQuery(yelp_conn, query_2)</code></pre></div>
+
+<div><pre><code class="language-none">CPU times: user 10.7 ms, sys: 2.18 ms, total: 12.9 ms
+Wall time: 41.6 s</code></pre></div>
+
+<div><pre><code class="language-python">len(result_2)</code></pre></div>
+
+<div><pre><code class="language-none">196</code></pre></div>
+
+<p>This means these users somehow posted a review before their account was created, suggesting a glitch with their database. Here are 5 of users who have such illege review records:</p>
+
+<div><pre><code class="language-python">heading_2 = (&quot;user.id&quot;, &quot;user.yelping_since&quot;, &quot;review.date&quot;)
+displayResult(result_2[:5], heading_2)</code></pre></div>
+
+<table>
+<tbody>
+<tr><td>user.id               </td><td>user.yelping_since </td><td>review.date        </td></tr>
+<tr><td>-58CWJ48is4duXgpvsWEGA</td><td>2013-09-18 00:00:00</td><td>2008-10-23 00:00:00</td></tr>
+<tr><td>-9NfX8JO_5UVN_h1K8yOcg</td><td>2015-02-12 00:00:00</td><td>2010-02-26 00:00:00</td></tr>
+<tr><td>-kEsfYKPs1_rgEWEIui2Mw</td><td>2015-02-14 00:00:00</td><td>2014-04-07 00:00:00</td></tr>
+<tr><td>-KP8Me2KRqO7IwKIaFL-Vg</td><td>2013-10-19 00:00:00</td><td>2013-09-02 00:00:00</td></tr>
+<tr><td>09T8OU8BDhQkiU8m4vZy_A</td><td>2013-10-21 00:00:00</td><td>2013-10-16 00:00:00</td></tr>
+</tbody>
+</table>
+
+<p><strong>Timing analysis:</strong> It takes about 40 seconds to run the query. After we deleted all indexes and keys we ran it again by setting the time out threshold to 5 minutes, and it timed out.</p>
+
+<p>This query deletes illegal reviews:</p>
+
+<div><pre><code class="language-python">clean_2 =  &quot;DELETE FROM review WHERE id in\ 
+            (SELECT review.id FROM (user INNER JOIN review ON user.id = review.user_id)\
+            WHERE user.yelping_since &gt; review.date\
+            GROUP BY user.id);&quot;
+
+executeQuery(yelp_conn, clean_2)</code></pre></div>
+
+<h4 id="toc_7">3. Can&#39;t be elite in a year before their account was made</h4>
+
+<div><pre><code class="language-python">query_3 =  &quot;SELECT user.id, user.yelping_since AS Date_of_yelping, elite_years.year AS Year_of_Elite\
+            FROM (user INNER JOIN elite_years ON user.id = elite_years.user_id)\
+            WHERE YEAR(user.yelping_since) &gt; elite_years.year\
+            GROUP BY user.id;&quot;
+
+%time result_3 = executeQuery(yelp_conn, query_3)</code></pre></div>
+
+<div><pre><code class="language-none">CPU times: user 993 µs, sys: 1.05 ms, total: 2.04 ms
+Wall time: 728 ms</code></pre></div>
+
+<div><pre><code class="language-python">len(result_3)</code></pre></div>
+
+<div><pre><code class="language-none">0</code></pre></div>
+
+<p>No illegal elite users records are found in the notebook.</p>
+
+<p><strong>Timing analysis:</strong> This query runs quite fast (within 1 second). However, somehow it timed out (&gt;5min threshold we set) when it is run on a database without keys and indexes. We think it is because this query involves joining operations.</p>
+
+<div><pre><code class="language-python">heading_3 = (&quot;user.id&quot;, &quot;user.yelping_since&quot;, &quot;elite_year.year&quot;)
+displayResult(result_3[:5], heading_3)</code></pre></div>
+
+<table>
+<tbody>
+<tr><td>user.id</td><td>user.yelping_since</td><td>elite_year.year</td></tr>
+</tbody>
+</table>
+
+<h4 id="toc_8">4. Can&#39;t checkin outside open hours</h4>
+
+<div><pre><code class="language-python">query_4 = &quot;SELECT COUNT(*) FROM checkin JOIN (SELECT hours.business_id, SUBSTRING_INDEX(hours, &#39;|&#39;, 1)\
+          AS day_of_week, SUBSTRING_INDEX(SUBSTRING_INDEX(hours, &#39;|&#39;, - 1), &#39;-&#39;, 1) AS opening_time,\
+          SUBSTRING_INDEX(SUBSTRING_INDEX(hours, &#39;|&#39;, - 1), &#39;-&#39;, - 1) AS closing_time FROM hours)\
+          AS a ON (a.business_id = checkin.business_id\
+          AND a.day_of_week = SUBSTRING_INDEX(checkin.date, &#39;-&#39;, 1))\
+          WHERE (a.opening_time &gt; SUBSTRING_INDEX(checkin.date, &#39;-&#39;, - 1)\
+          OR a.closing_time &lt; SUBSTRING_INDEX(checkin.date, &#39;-&#39;, - 1));&quot;
+
+%time result_4 = executeQuery(yelp_conn, query_4)
+result_4[0]</code></pre></div>
+
+<div><pre><code class="language-python">CPU times: user 5.56 ms, sys: 3.52 ms, total: 9.08 ms
+Wall time: 5min 14s
+(55493,)</code></pre></div>
+
+<p><strong>Timing analysis:</strong> This query takes about 5 mins to run. After we removed the keys and indices, the run time becomes incredibly long so we shut it down.</p>
+
+<p>This shows that there are many check ins that occur outside of the businesses open hours which are potentially invalid checkins, but this is not a guarantee because it is possible that the business changed their hours of operation at some point after someone checked in, resulting in the discrepency. </p>
+
+<p>This also shows the need within the database for the date column in the checkin and the hours column in the hours table to be normalized by splitting into date, opening time and closing time columns as this would save computation time having to perform substring_index computations on every row. No change is made to the database to correct this because it may sometimes happen since the business may change its open hours without updating that on yelp.</p>
+
+<h4 id="toc_9">5. <code>User.review_count</code> cannot be less than the sum of the number of reviews by a user</h4>
+
+<div><pre><code class="language-python">query_5 = &quot;select count(*) from user join (select count(user_id) as countedReviews, user_id from\
+           review group by user_id) as a on a.user_id = user.id where a.countedReviews &gt; review_count;&quot;
+%time result_5 = executeQuery(yelp_conn, query_5)
+print(result_5[0])</code></pre></div>
+
+<div><pre><code class="language-none">CPU times: user 6.4 ms, sys: 4.47 ms, total: 10.9 ms
+Wall time: 3min 49s
+(1323,)</code></pre></div>
+
+<p><strong>Timing analysis:</strong> As shown above it takes about 4min. After deleting all indexes and keys the run time was too long so and was interrupted.</p>
+
+<p>This shows that the way Yelp gets the review_count number is potentially flawed since it should never count there being less reviews than the number of reviews provided for each user, unless the dataset that it was acquiring the count from was out of date. </p>
+
+<p>This query updates the incorrect review_count:</p>
+
+<div><pre><code class="language-python">clean_5_1 = &quot;CREATE VIEW review_counts_for_users AS\
+             SELECT user_id, count(user_id) AS count\
+             FROM review GROUP BY user_id;&quot;
+
+clean_5_2 = &quot;UPDATE user SET review_count = (SELECT count\
+             FROM review_counts_for_users WHERE id=user_id);&quot;
+
+executeQuery(yelp_conn, clean_5_1)
+executeQuery(yelp_conn, clean_5_2)</code></pre></div>
+
+<h4 id="toc_10">6. Cannot be Elite in an invalid year</h4>
+
+<p>Invalid years include ones before 2004, years in the future or years they didn&#39;t post a review, tip or photo.</p>
+
+<div><pre><code class="language-python">query_6 = &quot;select count(*) from elite_years join \
+           (SELECT user_id, SUBSTRING_INDEX(date, &#39;-&#39;, 1) AS year FROM review) \
+           as a on a.user_id=elite_years.user_id and a.year = elite_years.year \
+           group by elite_years.user_id, elite_years.year;&quot;
+%time result_6 = executeQuery(yelp_conn, query_6)
+print(result_6[0])</code></pre></div>
+
+<div><pre><code class="language-none">CPU times: user 2.3 ms, sys: 1.39 ms, total: 3.69 ms
+Wall time: 2min 23s
+(37,)</code></pre></div>
+
+<p><strong>Timing analysis:</strong> Again this query includes joining operations, so it took very long time if the keys and indexes are removed. Overall, huge improvement can be observed when keys and indexes are applied.</p>
+
+<p>In total there are 186900 entries in elite_years. 37 appear to be erroneous. This query deletes these incorrect elite records:</p>
+
+<div><pre><code class="language-python">clean_6 = &quot;DELETE FROM elite_years where user_id in 
+             (select E.user_id from (SELECT * FROM elite_years) AS E join\
+             (SELECT user_id, SUBSTRING_INDEX(date, &#39;-&#39;, 1) AS year FROM review)\
+             as a on a.user_id=E.user_id and a.year = E.year\
+             group by E.user_id, E.year);&quot;
+    
+executeQuery(yelp_conn, clean_6)</code></pre></div>
+
+<h2 id="toc_11">Part I - 1.3 Data Analysis</h2>
+
+<div><pre><code class="language-python">import project_funclib
+
+import pymysql
+import nltk
+import pickle
+from matplotlib import pyplot
+from random import shuffle
+from pprint import pprint
+
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from nltk.classify.scikitlearn import SklearnClassifier
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+
+
+def find_features(review, frequent_words):
+    &#39;&#39;&#39;Find the which words in the review are contained within the word_features
+    what were determined from the movie review dataset&#39;&#39;&#39;
+    words = review.split()
+    features = dict.fromkeys(frequent_words, False)
+    for word in words:
+        if word in frequent_words:
+            features[word] = True
+    return features
+
+def isEnglish(text):
+    try:
+        text.encode(encoding=&#39;utf-8&#39;).decode(&#39;ascii&#39;)
+    except UnicodeDecodeError:
+        return False
+    else:
+        return True
+
+
+def build_dataset_from_query(query, documents, all_words, label):
+    &#39;&#39;&#39;Takes in the raw data from the SQL query and performs POS tagging as well as
+    cleans the data to remove foreign language reviews and symbols&#39;&#39;&#39;
+    for review in project_funclib.executeQuery(query):
+        text = review[0].replace(&#39;-&#39;, &#39; &#39;).replace(&#39;/&#39;, &#39; &#39;).replace(&#39;.&#39;, &#39; &#39;).lower()
+        if not isEnglish(text):
+            continue
+        documents.append((text, label))
+        words = nltk.tokenize.word_tokenize(text)
+        POS = nltk.tag.pos_tag(words)
+        #  [print(word, tag) for word, tag in POS if tag.startswith(&#39;J&#39;)]
+        [all_words.append(w.lower()) for w, tag in POS if tag.startswith((&#39;J&#39;, &#39;R&#39;))]
+    return
+
+
+def build_feature_set(spam_query, ham_query):
+    &#39;&#39;&#39;Takes in the raw data from the SQL query and formats it correctly for
+    the NLTK classifier&#39;&#39;&#39;
+    documents = []
+    all_words = []
+    build_dataset_from_query(spam_query, documents, all_words, &#39;spam&#39;)
+    build_dataset_from_query(ham_query, documents, all_words, &#39;ham&#39;)
+    # list of all words of interest from reviews (determined by select_tags
+    all_words = nltk.FreqDist(all_words)
+    # Select the top N most frequent words from this list to select as words
+    # that indicate a review is spam
+    word_features = set(list(all_words.keys())[:5000])
+    feature_sets = [(find_features(review, word_features), category) for
+                    (review, category) in documents]
+    shuffle(feature_sets)
+    return feature_sets</code></pre></div>
+
+<div><pre><code class="language-python">def build_sk_feature_set(spam_query, ham_query):
+    &#39;&#39;&#39;Takes in the raw data from the SQL query and formats it correctly for
+    the sklearn classifiers&#39;&#39;&#39;
+    documents = []
+    all_words = []
+    y = []
+    orpus = []
+    build_dataset_from_query(spam_query, documents, all_words, &#39;spam&#39;)
+    build_dataset_from_query(ham_query, documents, all_words, &#39;ham&#39;)
+    for text, label in documents:
+        y.append(label)
+        orpus.append(text)
+    cv = CountVectorizer(max_features=5000)
+    x = cv.fit_transform(orpus).toarray()
+    le = LabelEncoder()
+    y = le.fit_transform(y)
+    return x, y
+
+
+def naive_bayes_classifier(training_set, testing_set):
+    classifier = nltk.NaiveBayesClassifier.train(training_set)
+    accuracy = nltk.classify.accuracy(classifier, testing_set)
+    classifier.show_most_informative_features(5)
+    return accuracy
+
+
+def gaussianNB_classifier(X_train, X_test, y_train, y_test):
+    &#39;&#39;&#39;Applies sklearn&#39;s gaussianNB algorithm to the feature set&#39;&#39;&#39;
+
+    gaussian_nb_classifier = GaussianNB()
+    gaussian_nb_classifier.fit(X_train, y_train)
+    pred = gaussian_nb_classifier.predict(X_test)
+    print(&#39;gaussianNB Accuracy score: {}&#39;.format(accuracy_score(y_test, pred)))
+    print(&#39;gaussianNB Precision score: {}&#39;.format(precision_score(y_test, pred)))
+    print(&#39;gaussianNB Recall score: {}&#39;.format(recall_score(y_test, pred)))
+    print(&#39;gaussianNB F1 score: {}&#39;.format(f1_score(y_test, pred)))
+
+
+def random_forest_classifier(X_train, X_test, y_train, y_test):
+    &#39;&#39;&#39;Applies sklearn&#39;s random forest algorithm to the feature set&#39;&#39;&#39;
+
+    classifier1 = RandomForestClassifier(n_estimators=15, criterion=&#39;entropy&#39;)
+    classifier1.fit(X_train, y_train)
+    predRF = classifier1.predict(X_test)
+    print(&#39;RF Accuracy score: {}&#39;.format(accuracy_score(y_test, predRF)))
+    print(&#39;RF Precision score: {}&#39;.format(precision_score(y_test, predRF)))
+    print(&#39;RF Recall score: {}&#39;.format(recall_score(y_test, predRF)))
+    print(&#39;RF F1 score: {}&#39;.format(f1_score(y_test, predRF)))
+
+
+def train_classifiers(category, ages, num_results, num_reviews):
+    &#39;&#39;&#39;Executes the SQL queries to get the necessary data and calls the
+    classification algorithms on the data after it is formatted correctly&#39;&#39;&#39;
+
+    spam_query = &quot;SELECT text FROM (SELECT text, business_id, user_id, date from review \
+            WHERE useful = 0 AND funny = 0 AND cool = 0) as c JOIN\
+            (SELECT id, yelping_since from user where average_stars = (5 or 1) AND review_count = 1)\
+            AS a ON a.id=c.user_id JOIN (select business_id from category WHERE\
+            category = &#39;%s&#39;) as b USING(business_id) WHERE\
+            c.date - a.yelping_since BETWEEN %d and %d limit %d;&quot;\
+            % (category, ages[0]*100000000000, ages[1]*100000000000, num_results)
+    ham_query = &quot;SELECT text FROM review JOIN (select id from user where\
+            review_count &gt; %d) as a ON a.id=review.user_id JOIN (SELECT\
+            business_id from category where category=&#39;%s&#39;) as b on\
+            review.business_id=b.business_id limit %d&quot; % (num_reviews, category, num_results)
+    # Build the feature sets from the reviews returned by each query
+    # They will each be labeled spam or ham (ham are not spam)
+    feature_sets = build_feature_set(spam_query, ham_query)
+    len_data = int(len(feature_sets) * 0.5)
+    training_set = feature_sets[:len_data]
+    testing_set = feature_sets[len_data:]
+    # These are additional classification algorithms that were tried but
+    # removed to speed up computation time
+    #  x, y = build_sk_feature_set(spam_query, ham_query)
+    #  X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.30)
+    #  random_forest_classifier(X_train, X_test, y_train, y_test)
+    #  gaussianNB_classifier(X_train, X_test, y_train, y_test)
+    return naive_bayes_classifier(training_set, testing_set)
+
+
+num_results = 1000  # Total number of results to analyze from each query to speed up execution
+age = (0, 0)  # The time between account creation and the first review for accounts with 1 review
+category = &#39;Restaurants&#39;  # The category of businesses to analyze
+num_reviews = 10  # The number of reviews an account has to leave to be classified as not spam
+
+# Analyze the number of reviews between 2 and 101 as the minimum required to not be spam
+accuracy = []
+for num_reviews in range(2, 21, 2):
+    accuracy.append(train_classifiers(category, age, num_results, num_reviews))
+
+pyplot.figure(1)
+pyplot.plot(range(0, 101, 10), accuracy)
+pyplot.xlabel(&#39;review_count by User&#39;)
+pyplot.ylabel(&#39;Spam Detection Accuracy&#39;)
+
+# Analyze ages of reviews between 0 and 7 days, with 0 having the biggest population
+accuracy = []
+ages_high = [0]
+ages_low = [0]
+[ages_high.append(i) for i in range(6)]
+[ages_low.append(i) for i in range(1, 7)]
+for age_low, age_high in zip(ages_low, ages_high):
+    ages = (age_low, age_high)
+    accuracy.append(train_classifiers(category, ages, num_results, num_reviews))
+
+pyplot.figure(2)
+pyplot.plot(ages_low, accuracy)
+pyplot.xlabel(&#39;Time Between Account Creation and First Review (days)&#39;)
+pyplot.ylabel(&#39;Spam Detection Accuracy&#39;)
+
+# Analyze the accuracy of spam detection across different categories of businesses
+accuracy = []
+categories = [&#39;Restaurants&#39;, &#39;Health &amp; Medical&#39;, &#39;Shopping&#39;, &#39;Beauty &amp; Spas&#39;,
+              &#39;Home Services&#39;, &#39;Nightlife&#39;, &#39;Automotive&#39;]
+for category in categories:
+    accuracy.append(train_classifiers(category, age, num_results, num_reviews))
+
+pyplot.figure(3)
+pyplot.plot(categories, accuracy)
+pyplot.xlabel(&#39;Business Category&#39;)
+pyplot.ylabel(&#39;Spam Detection Accuracy&#39;)</code></pre></div>
+
+<p>Conditions for determining which reviews are SPAM:<br>
+Accuracy with WHERE review<em>count = 1: 61%<br>
+Accuracy with WHERE review</em>count = 1 AND review.useful = 0 AND review.funny = 0 AND review.cool = 0: 62%<br>
+Expanding POS tags looked at to include verbs on top of adjective and adverbs: 63%<br>
+Look at the top 100 frequently appearing words instead of 1000: 53%<br>
+Look at the top 5000 frequently appearing words instead of 1000: 66%<br>
+Reducing POS tags looked at just adjectives: 67%<br>
+Remove non-english reviews and replacing - and / with spaces: 67%<br>
+Add review.date -yelping<em>since = 0: 70%<br>
+Change query to &#39;SELECT text FROM user join review on user.id=review.user</em>id where average<em>stars =  5 or average</em>stars = 1&#39;: 71%<br>
+Change query to &#39;SELECT text FROM review JOIN user ON user.id=review.user<em>id WHERE review</em>count = 1 AND review.useful = 0 AND review.funny = 0 AND review.cool = 0 AND review.date - yelping<em>since and average</em>stars = 5 limit 1000&#39;: 76%<br>
+Change query to &#39;SELECT text FROM review JOIN user ON user.id=review.user<em>id WHERE review</em>count = 1 AND review.useful = 0 AND review.funny = 0 AND review.cool = 0 AND review.date - yelping<em>since and average</em>stars = 1 limit 1000&#39;: 80%<br>
+Change query to only include restaurants: 83%
+Change query to only include hotels: 85%
+Change query to only include restaurants: 85%</p>
+
+<h3 id="toc_12">Methods</h3>
+
+<p>Now that we&#39;re confident that the data is sufficiently cleaned as to not produce erroneous results from our analysis outside of those of interest, we can begin performing the actual analysis of trends in the data. The trend that was analyzed is the affect different attributes about users and their reviews have on the likelihood that their review is spam. These attributes include the type of business being reviewed, the ratings of the reviews left by users, the average<em>stars of the user, the time between account creation and  and the review</em>count of the user. In order to determine if a given query returns reviews that are spam a machine learning classifier was used that implemented a bag-of-words model and applied a naive Bayes and random forest classifier onto this model. The metric we looked at to determine the liklihood that a review is spam is the accuracy of the classifier in classifying the suspected spam reviews when mixed with reviews that are not spam.<br>
+The bag-of-words model takes each spam and not spam review and looks at the words that occur most frequently in the reviews to use those as features. In this case we looked at the top 5000 most occuring adjectives and adverbs in the review to use as features. We found the adjectives and adverbs using NLTK&#39;s part of speech tagging on every review and decided to go with these parts of speech because they are the words of interest in reviews in general and provide and easy way to eliminate frequently occuring words in general that are not specific to reviews (ex. &#39;the&#39; and &#39;it&#39;).<br>
+Classification was performed initially using only a naive Bayes classifier that is built into the NLTK library which uses Bayes theorem to determine the probability that a review is spam given the probability that each feature (word) in the review is spam. If this probability is over 50% then that review is classified as spam. Later on other classificiation algorithms were tried to see if a better classification accuracy could be achieved such as scikit-learn&#39;s random forest classifier and gaussian naive Bayes, however in general these algorithms performed worse than NLTK&#39;s naive Bayes classifier so it was the only one used to save computation time.<br>
+Accuracy of the spam prediction was determined by splitting the shuffled spam and ham reviews in half, with one half becoming the training set to train the classifier on, and the other half becoming the testing set which the spam classifier is tested on to determine its accuracy.
+The metrics analyzed were:</p>
+
+<ul>
+<li>Categories - Restaurants, Health &amp; Medical, Shopping, Beauty &amp; Spas, Home Services, Nightlife and Automotive were lo</li>
+<li>Age - Time between account creation and first review for potential bot accounts with only a single review, looked between 0 and 6 days one day at a time</li>
+<li>number of reviews - The minimum numbers of reviews that an accounts needs to leave to not be classified as spam</li>
+<li>number of results - the number of rows from each query that were analyzed, this was left fixed at 1000 for speed</li>
+</ul>
+
+<h3 id="toc_13">Results</h3>
+
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/1_review_stars.png" width="800">
+</div>
+
+<p>It was found that the longer someone waited to leave their first review from account creation, the less likely it was to be spam. This was expected as any bot account that is created to simply boost up the score of a restaurant would leave a review immediately after creation, as opposed to a real user that may make their account and then not leave a review on a business until they go to one a while later. The downside of this metric is that there are also many real used that create account while at a business and leave an overly positive or negative review because its fresh in their memory.
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/categories.png" width="800"><br>
+</div>
+Next, it was found that amoungst the different categories of businesses that Automotive businesses were the least likely to have spam reviews, while shopping locations were the most. Analyzing this further reveals that on average the automotive customers were more likely to have accounts with only one review for the automotive business, suggesting automotive people are less likely to be active users versus shopping locations which have legitimate users that are more active Yelp users so the ones with only one review are more likely to be spam.<br>
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/avg_stars.png" width="800">
+</div>
+It was also found that the average<em>stars of the users&#39; account influences the likelihood that their reviews are spam in that if a users&#39; average</em>stars is 5 or 1 versus if their average_stars is some other value showing that they&#39;ve given other reviews besides just the top score or the lowest. This metric would miss spam users that use their account for spamming both high and low, instead of only doing one or the other.</p>
+
+<h3 id="toc_14">Future Work</h3>
+
+<p>While classifiers for spam emails are quite well established, spam classifiers for reviews are more challenging because they lack many of the features that are indicative of spam such as including links or using language that suggests that the person is trying to sell something. However, this is an active area of research and there are other more complex features that have been identified that have been shown to indicate a review is spam such as: <a href="reference:%20http://www.aclweb.org/anthology/P14-1147">(reference)</a></p>
+
+<ul>
+<li>Using a separate gold standard dataset of honest and deceptive reviews to train with instead of using approximations from the dataset</li>
+<li>Look for spacial details in a review to indicate honesty (ex. terms such as “bathroom”) while deceptive reviews will talk about general concepts such as why or with whom they went to the hotel</li>
+<li>Using Bayesian learning to analyze multiple of these metrics together to draw a more definitive conclusion</li>
+<li>Checking for if there are many grammatical and spelling mistakes </li>
+</ul>
+
+<h2 id="toc_15">Part II. 2.1 User control</h2>
+
+<h3 id="toc_16">2.1.1 Description of the problem</h3>
+
+<p>In real applications, the Yelp database is expected to be visited by
+different groups of people, including customers (users), data analyst
+(special users), and developers. In this project, this is further
+divided into five categories:</p>
+
+<ol>
+<li><p>A casual user who uses the application to browse search results.
+These users do not need to have an account; hence, they cannot
+submit reviews.</p></li>
+<li><p>Critiques that use the application to browse results just like the
+casual user, but they also leave reviews for places they visit. A
+logged in user should only be provided enough privileges to write
+the review.</p></li>
+<li><p>Business analysts can use the application to produce sales reports
+and may want to do special data mining and analysis. They cannot
+perform IUD (Insert/Update/Delete) operations on the database but
+should have access to creating extra views on the database schema.</p></li>
+<li><p>Developers working with this database are able to create new tables
+and perform data cleaning and indexing. They are allowed to perform
+IUD operations on the database.</p></li>
+<li><p>The database admin who has full access over the database.</p></li>
+</ol>
+
+<p>The principle of granting privilege is to guarantee that each group of
+people have sufficient permission in order to protect the database.
+First, the list of all privileges in MySQL 5.7 are listed in the Table below, from which we can choose levels for each user
+group.</p>
+
+<table border=0 cellpadding=0 cellspacing=0 width=1350 style='border-collapse:
+ collapse;table-layout:fixed;width:1011pt;box-sizing: inherit;outline: 0px;
+ border-spacing: 0px;font-variant-ligatures: normal;font-variant-caps: normal;
+ orphans: 2;text-align:start;widows: 2;-webkit-text-stroke-width: 0px;
+ text-decoration-style: initial;text-decoration-color: initial'>
+ <col width=199 style='mso-width-source:userset;mso-width-alt:6357;width:149pt;
+ box-sizing: inherit'>
+ <col width=716 style='mso-width-source:userset;mso-width-alt:22912;width:537pt;
+ box-sizing: inherit'>
+ <col width=87 span=5 style='width:65pt;box-sizing: inherit;outline: 0px'>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 width=199 style='height:16.0pt;width:149pt'>Privilege</td>
+  <td width=716 style='width:330pt'>Meaning and Grantable Levels</td>
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>ALL [PRIVILEGES]</td>
+  <td style='box-sizing: inherit;outline: 0px'>Grant all privileges at
+  specified access level except&nbsp;GRANT OPTION&nbsp;and&nbsp;PROXY.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>ALTER</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;ALTER TABLE.
+  Levels: Global, database, table.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>ALTER ROUTINE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable stored routines to be
+  altered or dropped. Levels: Global, database, procedure.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>CREATE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable database and table
+  creation. Levels: Global, database, table.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>CREATE ROUTINE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable stored routine creation.
+  Levels: Global, database.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>CREATE TABLESPACE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable tablespaces and log file
+  groups to be created, altered, or dropped. Level: Global.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>CREATE TEMPORARY TABLES</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;CREATE
+  TEMPORARY TABLE. Levels: Global, database.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>CREATE USER</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;CREATE
+  USER,&nbsp;DROP USER,&nbsp;RENAME USER, and&nbsp;REVOKE ALL PRIVILEGES.
+  Level: Global.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>CREATE VIEW</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable views to be created or
+  altered. Levels: Global, database, table.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>DELETE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;DELETE.
+  Level: Global, database, table.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>DROP</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable databases, tables, and
+  views to be dropped. Levels: Global, database, table.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>EVENT</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of events for the
+  Event Scheduler. Levels: Global, database.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>EXECUTE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable the user to execute
+  stored routines. Levels: Global, database, table.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>FILE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable the user to cause the
+  server to read or write files. Level: Global.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>GRANT OPTION</td>
+  <td style='mso-ignore:colspan;box-sizing: inherit;outline: 0px'>Enable
+  privileges to be granted to or removed from other accounts. Levels: Global,
+  database, table, procedure, proxy.</td>
+  
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>INDEX</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable indexes to be created or
+  dropped. Levels: Global, database, table.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>INSERT</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;INSERT.
+  Levels: Global, database, table, column.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>LOCK TABLES</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;LOCK
+  TABLES&nbsp;on tables for which you have the&nbsp;SELECT&nbsp;privilege.
+  Levels: Global, database.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>PROCESS</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable the user to see all
+  processes with&nbsp;SHOW PROCESSLIST. Level: Global.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>PROXY</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable user proxying. Level:
+  From user to user.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>REFERENCES</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable foreign key creation.
+  Levels: Global, database, table, column.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>RELOAD</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use
+  of&nbsp;FLUSH&nbsp;operations. Level: Global.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>REPLICATION CLIENT</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable the user to ask where
+  master or slave servers are. Level: Global.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>REPLICATION SLAVE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable replication slaves to
+  read binary log events from the master. Level: Global.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>SELECT</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;SELECT.
+  Levels: Global, database, table, column.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>SHOW DATABASES</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable&nbsp;SHOW
+  DATABASES&nbsp;to show all databases. Level: Global.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>SHOW VIEW</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;SHOW CREATE
+  VIEW. Levels: Global, database, table.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>SHUTDOWN</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;mysqladmin
+  shutdown. Level: Global.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>SUPER</td>
+  <td style='mso-ignore:colspan;box-sizing: inherit;outline: 0px'>Enable
+  use of other administrative operations such as&nbsp;CHANGE MASTER
+  TO,&nbsp;KILL,&nbsp;PURGE BINARY LOGS,&nbsp;SET GLOBAL, and&nbsp;mysqladmin
+  debug&nbsp;command. Level: Global.</td>
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>TRIGGER</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable trigger operations.
+  Levels: Global, database, table.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>UPDATE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Enable use of&nbsp;UPDATE.
+  Levels: Global, database, table, column.</td>
+ 
+ </tr>
+ <tr height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'>
+  <td height=21 style='height:16.0pt;box-sizing: inherit;outline: 0px'
+  scope=row>USAGE</td>
+  <td style='box-sizing: inherit;outline: 0px'>Synonym for&nbsp;"no privileges"</td>
+ 
+ </tr>
+</table>
+
+<h3 id="toc_17">2.1.2 Group 1</h3>
+
+<p>For the first group of users, they only browse information about the
+business, including their opening hours, stars, reviews, without signing
+in so they do not need to write information into the database. In some
+cases, if the app allows some specific types of anonymous
+communications, such as marking a review as “cool&quot; or “useful” by a
+visitor, then the permission should be extended to allow for
+modification of the count of these tags. However, in this project we
+assume that the user are not allowed to perform any operations except
+exploring. Hereby we only grant <code>SELECT</code> privilege to the first group of
+user, which we call <code>user1</code>:</p>
+
+<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user1&#39;@&#39;%&#39;;
+CREATE USER user1;
+GRANT SELECT ON yelp_db.* TO &#39;user1&#39;@&#39;%&#39;;</code></pre></div>
+
+<h3 id="toc_18">2.1.3 Group 2</h3>
+
+<p>For the second type of user, they are different from casual users in
+that they may leave reviews or tips on a business. They are logged-in
+users, so they can interact with other reviews or tips. Therefore, they
+are granted global <code>SELECT</code> privilege, <code>INSERT</code> on the review and tip
+table, <code>UPDATE</code> on certain columns in the business table, and table-wise
+<code>UPDATE</code> on user table. The SQL query is shown as follows, similarly we
+call this <code>user2</code>:</p>
+
+<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user2&#39;@&#39;%&#39;;
+CREATE USER user2;
+GRANT SELECT ON yelp_db.* TO &#39;user2&#39;@&#39;%&#39;;
+GRANT INSERT ON yelp_db.review TO &#39;user2&#39;@&#39;%&#39;;
+GRANT INSERT ON yelp_db.tip TO &#39;user2&#39;@&#39;%&#39;;
+GRANT UPDATE (stars) ON yelp_db.business TO &#39;user2&#39;@&#39;%&#39;;
+GRANT UPDATE (review_count) ON yelp_db.business TO &#39;user2&#39;@&#39;%&#39;;
+GRANT UPDATE ON yelp_db.user TO &#39;user2&#39;@&#39;%&#39;;</code></pre></div>
+
+<h3 id="toc_19">2.1.4 Group 3</h3>
+
+<p>Business analysts are special casual users. Here we assume they are not
+logged in so they are not expected to change any contents in the
+database. Therefore, we only add some view-related privileges to this
+group of users besides those granted to group 1:</p>
+
+<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user3&#39;@&#39;%&#39;;
+CREATE USER user3;
+GRANT SELECT, CREATE VIEW, SHOW VIEW ON yelp_db.* TO &#39;user3&#39;@&#39;%&#39;;</code></pre></div>
+
+<h3 id="toc_20">2.1.5 Group 4</h3>
+
+<p>Group 4 corresponds to normal developers. These people are in charge of
+the visiting, development and maintenance of database. Therefore we
+grant them full IUD privileges on the whole database. Also, in case they
+need to perform automated operations, query optimization or concurrency
+control, we also grant them with view, routine(function, procedure),
+index and lock permissions. The SQL queries are as follows:</p>
+
+<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user4&#39;@&#39;%&#39;;
+CREATE USER user4;
+GRANT ALTER ROUTINE, CREATE ROUTINE, EXECUTE, # routine related
+CREATE VIEW, SHOW VIEW, # view related
+CREATE, ALTER, INDEX, REFERENCES, # tables, indexes and keys
+DELETE, DROP, INSERT, SELECT, UPDATE # basic operations including IUD
+ON yelp_db.* TO &#39;user4&#39;@&#39;%&#39;;</code></pre></div>
+
+<h3 id="toc_21">2.1.6 Group 5</h3>
+
+<p>Group 5 is the database administrator, so its privilege is all but
+<code>GRANT</code> and <code>PROXY</code> options, which should only be done using the root
+user. In practical use only these two operations should be done using
+root user in order to prevent abuse or unexpected threats to the
+database. The SQL queries are as follows:</p>
+
+<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user5&#39;@&#39;%&#39;;
+CREATE USER user5;
+GRANT ALL ON yelp_db.* TO &#39;user5&#39;@&#39;%&#39;;</code></pre></div>
+
+
+
+
+</body>
+
+</html>
