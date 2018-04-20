@@ -68,17 +68,21 @@ yelp_conn = open_conn()
 
 ## Part I - 1.1 Database structure
 Here is the Entity-Relationship diagram of the database. The attributes are not shown because there are too many for some of the tables. Instead, they can be find in the following figure illustrating the relational model.
-
+<div style="text-align:center">
 <img src="../../ER_Diagram.png" width="800">
+</div>
 
 Here is the relational model of the database. Primary keys are marked as orange and foreign keys are marked as blue. Also the arrows indicate the reference relations between the tables.
+
+<div style="text-align:center">
 <img src="../../RelationalModel.png" width="800">
+</div>
 
 ## Part I - 1.2 Data cleaning
 
-First some sanity checks and consistency checks were performed on the yelp database. The data in the database should follow the nature rules and should be consistent with each other. After studying the relationship models in of it, we perfomed the following checks and cleaning:
-- Common time checks: review or becoming an elite member can not occur before yelp was founded or from the future. 
-- Logic consistency checks: a user can not leave a review before creating the account, a user can not become an elite member before becoming a yelp user, people should not check in outside open hours, and the reviews written by each user should be in consistent with that in the user table.
+First some sanity checks and consistency checks were performed on the yelp database. The data in the database should follow rules and should be consistent with each other. After studying the relationship models in of it, we perfomed the following checks and cleaning:
+- Logical time checks: review or becoming an elite member can not occur before yelp was founded or from the future. 
+- Logic consistency checks: a user can not leave a review before creating the account, a user can not become an elite member before becoming a yelp user, people should not check in at a business outside open hours, and the reviews written by each user should be in consistent with that in the user table.
 
 We first got the queries ready, then came up with the following indices to accelerate the running of queries. As we are going to time the execution commands, they are added before further discussion, as shown in 1.2.1. After that in 1.2.2, we will introduce the checking queries and the measures taken to deal with the inconsistency and broken data. 
 
@@ -294,7 +298,7 @@ query_4 = "SELECT COUNT(*) FROM checkin JOIN (SELECT hours.business_id, SUBSTRIN
 result_4[0]
 ```
 
-```python
+```
 CPU times: user 5.56 ms, sys: 3.52 ms, total: 9.08 ms
 Wall time: 5min 14s
 (55493,)
@@ -373,201 +377,7 @@ executeQuery(yelp_conn, clean_6)
 
 ## Part I - 1.3 Data Analysis
 
-```python
-import project_funclib
-
-import pymysql
-import nltk
-import pickle
-from matplotlib import pyplot
-from random import shuffle
-from pprint import pprint
-
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from nltk.classify.scikitlearn import SklearnClassifier
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
-
-
-def find_features(review, frequent_words):
-    '''Find the which words in the review are contained within the word_features
-    what were determined from the movie review dataset'''
-    words = review.split()
-    features = dict.fromkeys(frequent_words, False)
-    for word in words:
-        if word in frequent_words:
-            features[word] = True
-    return features
-
-
-def isEnglish(text):
-    try:
-        text.encode(encoding='utf-8').decode('ascii')
-    except UnicodeDecodeError:
-        return False
-    else:
-        return True
-
-
-def build_dataset_from_query(query, documents, all_words, label):
-    '''Takes in the raw data from the SQL query and performs POS tagging as well as
-    cleans the data to remove foreign language reviews and symbols'''
-    for review in project_funclib.executeQuery(query):
-        text = review[0].replace('-', ' ').replace('/', ' ').replace('.', ' ').lower()
-        if not isEnglish(text):
-            continue
-        documents.append((text, label))
-        words = nltk.tokenize.word_tokenize(text)
-        POS = nltk.tag.pos_tag(words)
-        #  [print(word, tag) for word, tag in POS if tag.startswith('J')]
-        [all_words.append(w.lower()) for w, tag in POS if tag.startswith(('J', 'R'))]
-    return
-
-
-def build_feature_set(spam_query, ham_query):
-    '''Takes in the raw data from the SQL query and formats it correctly for
-    the NLTK classifier'''
-    documents = []
-    all_words = []
-    build_dataset_from_query(spam_query, documents, all_words, 'spam')
-    build_dataset_from_query(ham_query, documents, all_words, 'ham')
-    # list of all words of interest from reviews (determined by select_tags
-    all_words = nltk.FreqDist(all_words)
-    # Select the top N most frequent words from this list to select as words
-    # that indicate a review is spam
-    word_features = set(list(all_words.keys())[:5000])
-    feature_sets = [(find_features(review, word_features), category) for
-                    (review, category) in documents]
-    shuffle(feature_sets)
-    return feature_sets
-
-
-def build_sk_feature_set(spam_query, ham_query):
-    '''Takes in the raw data from the SQL query and formats it correctly for
-    the sklearn classifiers'''
-    documents = []
-    all_words = []
-    y = []
-    orpus = []
-    build_dataset_from_query(spam_query, documents, all_words, 'spam')
-    build_dataset_from_query(ham_query, documents, all_words, 'ham')
-    for text, label in documents:
-        y.append(label)
-        orpus.append(text)
-    cv = CountVectorizer(max_features=5000)
-    x = cv.fit_transform(orpus).toarray()
-    le = LabelEncoder()
-    y = le.fit_transform(y)
-    return x, y
-
-
-def naive_bayes_classifier(training_set, testing_set):
-    classifier = nltk.NaiveBayesClassifier.train(training_set)
-    accuracy = nltk.classify.accuracy(classifier, testing_set)
-    classifier.show_most_informative_features(5)
-    return accuracy
-
-
-def gaussianNB_classifier(X_train, X_test, y_train, y_test):
-    '''Applies sklearn's gaussianNB algorithm to the feature set'''
-
-    gaussian_nb_classifier = GaussianNB()
-    gaussian_nb_classifier.fit(X_train, y_train)
-    pred = gaussian_nb_classifier.predict(X_test)
-    print('gaussianNB Accuracy score: {}'.format(accuracy_score(y_test, pred)))
-    print('gaussianNB Precision score: {}'.format(precision_score(y_test, pred)))
-    print('gaussianNB Recall score: {}'.format(recall_score(y_test, pred)))
-    print('gaussianNB F1 score: {}'.format(f1_score(y_test, pred)))
-
-
-def random_forest_classifier(X_train, X_test, y_train, y_test):
-    '''Applies sklearn's random forest algorithm to the feature set'''
-
-    classifier1 = RandomForestClassifier(n_estimators=15, criterion='entropy')
-    classifier1.fit(X_train, y_train)
-    predRF = classifier1.predict(X_test)
-    print('RF Accuracy score: {}'.format(accuracy_score(y_test, predRF)))
-    print('RF Precision score: {}'.format(precision_score(y_test, predRF)))
-    print('RF Recall score: {}'.format(recall_score(y_test, predRF)))
-    print('RF F1 score: {}'.format(f1_score(y_test, predRF)))
-
-
-def train_classifiers(category, ages, num_results, num_reviews):
-    '''Executes the SQL queries to get the necessary data and calls the
-    classification algorithms on the data after it is formatted correctly'''
-
-    spam_query = "SELECT text FROM (SELECT text, business_id, user_id, date from review \
-            WHERE useful = 0 AND funny = 0 AND cool = 0) as c JOIN\
-            (SELECT id, yelping_since from user where average_stars = (5 or 1) AND review_count = 1)\
-            AS a ON a.id=c.user_id JOIN (select business_id from category WHERE\
-            category = '%s') as b USING(business_id) WHERE\
-            c.date - a.yelping_since BETWEEN %d and %d limit %d;"\
-            % (category, ages[0]*100000000000, ages[1]*100000000000, num_results)
-    ham_query = "SELECT text FROM review JOIN (select id from user where\
-            review_count > %d) as a ON a.id=review.user_id JOIN (SELECT\
-            business_id from category where category='%s') as b on\
-            review.business_id=b.business_id limit %d" % (num_reviews, category, num_results)
-    # Build the feature sets from the reviews returned by each query
-    # They will each be labeled spam or ham (ham are not spam)
-    feature_sets = build_feature_set(spam_query, ham_query)
-    len_data = int(len(feature_sets) * 0.5)
-    training_set = feature_sets[:len_data]
-    testing_set = feature_sets[len_data:]
-    # These are additional classification algorithms that were tried but
-    # removed to speed up computation time
-    #  x, y = build_sk_feature_set(spam_query, ham_query)
-    #  X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.30)
-    #  random_forest_classifier(X_train, X_test, y_train, y_test)
-    #  gaussianNB_classifier(X_train, X_test, y_train, y_test)
-    return naive_bayes_classifier(training_set, testing_set)
-
-
-num_results = 1000  # Total number of results to analyze from each query to speed up execution
-age = (0, 0)  # The time between account creation and the first review for accounts with 1 review
-category = 'Restaurants'  # The category of businesses to analyze
-num_reviews = 10  # The number of reviews an account has to leave to be classified as not spam
-
-# Analyze the number of reviews between 2 and 101 as the minimum required to not be spam
-accuracy = []
-for num_reviews in range(2, 21, 2):
-    accuracy.append(train_classifiers(category, age, num_results, num_reviews))
-
-pyplot.figure(1)
-pyplot.plot(range(0, 101, 10), accuracy)
-pyplot.xlabel('review_count by User')
-pyplot.ylabel('Spam Detection Accuracy')
-
-# Analyze ages of reviews between 0 and 7 days, with 0 having the biggest population
-accuracy = []
-ages_high = [0]
-ages_low = [0]
-[ages_high.append(i) for i in range(6)]
-[ages_low.append(i) for i in range(1, 7)]
-for age_low, age_high in zip(ages_low, ages_high):
-    ages = (age_low, age_high)
-    accuracy.append(train_classifiers(category, ages, num_results, num_reviews))
-
-pyplot.figure(2)
-pyplot.plot(ages_low, accuracy)
-pyplot.xlabel('Time Between Account Creation and First Review (days)')
-pyplot.ylabel('Spam Detection Accuracy')
-
-# Analyze the accuracy of spam detection across different categories of businesses
-accuracy = []
-categories = ['Restaurants', 'Health & Medical', 'Shopping', 'Beauty & Spas',
-              'Home Services', 'Nightlife', 'Automotive']
-for category in categories:
-    accuracy.append(train_classifiers(category, age, num_results, num_reviews))
-
-pyplot.figure(3)
-pyplot.plot(categories, accuracy)
-pyplot.xlabel('Business Category')
-pyplot.ylabel('Spam Detection Accuracy')
-```
-
+### 1.3.1 General results
 Conditions for determining which reviews are SPAM:  
 Accuracy with WHERE review_count = 1: 61%  
 Accuracy with WHERE review_count = 1 AND review.useful = 0 AND review.funny = 0 AND review.cool = 0: 62%  
@@ -584,32 +394,43 @@ Change query to only include restaurants: 83%
 Change query to only include hotels: 85%
 Change query to only include restaurants: 85%
 
-### Methods 
+### 1.3.2 Methods 
+
 Now that we're confident that the data is sufficiently cleaned as to not produce erroneous results from our analysis outside of those of interest, we can begin performing the actual analysis of trends in the data. The trend that was analyzed is the affect different attributes about users and their reviews have on the likelihood that their review is spam. These attributes include the type of business being reviewed, the ratings of the reviews left by users, the average_stars of the user, the time between account creation and  and the review_count of the user. In order to determine if a given query returns reviews that are spam a machine learning classifier was used that implemented a bag-of-words model and applied a naive Bayes and random forest classifier onto this model. The metric we looked at to determine the liklihood that a review is spam is the accuracy of the classifier in classifying the suspected spam reviews when mixed with reviews that are not spam.  
+
 The bag-of-words model takes each spam and not spam review and looks at the words that occur most frequently in the reviews to use those as features. In this case we looked at the top 5000 most occuring adjectives and adverbs in the review to use as features. We found the adjectives and adverbs using NLTK's part of speech tagging on every review and decided to go with these parts of speech because they are the words of interest in reviews in general and provide and easy way to eliminate frequently occuring words in general that are not specific to reviews (ex. 'the' and 'it').  
+
 Classification was performed initially using only a naive Bayes classifier that is built into the NLTK library which uses Bayes theorem to determine the probability that a review is spam given the probability that each feature (word) in the review is spam. If this probability is over 50% then that review is classified as spam. Later on other classificiation algorithms were tried to see if a better classification accuracy could be achieved such as scikit-learn's random forest classifier and gaussian naive Bayes, however in general these algorithms performed worse than NLTK's naive Bayes classifier so it was the only one used to save computation time.  
+
 Accuracy of the spam prediction was determined by splitting the shuffled spam and ham reviews in half, with one half becoming the training set to train the classifier on, and the other half becoming the testing set which the spam classifier is tested on to determine its accuracy.
 The metrics analyzed were:
+
 * Categories - Restaurants, Health & Medical, Shopping, Beauty & Spas, Home Services, Nightlife and Automotive were lo
 * Age - Time between account creation and first review for potential bot accounts with only a single review, looked between 0 and 6 days one day at a time
 * number of reviews - The minimum numbers of reviews that an accounts needs to leave to not be classified as spam
 * number of results - the number of rows from each query that were analyzed, this was left fixed at 1000 for speed
 
-### Results
+### 1.3.3 Results
 
+<div style="text-align:center">
 <img src="../../pythonAnalysis/figures/1_review_stars.png" width="800">
+</div>
 
 It was found that the longer someone waited to leave their first review from account creation, the less likely it was to be spam. This was expected as any bot account that is created to simply boost up the score of a restaurant would leave a review immediately after creation, as opposed to a real user that may make their account and then not leave a review on a business until they go to one a while later. The downside of this metric is that there are also many real used that create account while at a business and leave an overly positive or negative review because its fresh in their memory.
 
+<div style="text-align:center">
 <img src="../../pythonAnalysis/figures/categories.png" width="800">  
+</div>
 
 Next, it was found that amoungst the different categories of businesses that Automotive businesses were the least likely to have spam reviews, while shopping locations were the most. Analyzing this further reveals that on average the automotive customers were more likely to have accounts with only one review for the automotive business, suggesting automotive people are less likely to be active users versus shopping locations which have legitimate users that are more active Yelp users so the ones with only one review are more likely to be spam.  
 
+<div style="text-align:center">
 <img src="../../pythonAnalysis/figures/avg_stars.png" width="800">
+</div>
 
 It was also found that the average_stars of the users' account influences the likelihood that their reviews are spam in that if a users' average_stars is 5 or 1 versus if their average_stars is some other value showing that they've given other reviews besides just the top score or the lowest. This metric would miss spam users that use their account for spamming both high and low, instead of only doing one or the other.
 
-### Future Work
+### 1.3.4 Future Work
 While classifiers for spam emails are quite well established, spam classifiers for reviews are more challenging because they lack many of the features that are indicative of spam such as including links or using language that suggests that the person is trying to sell something. However, this is an active area of research and there are other more complex features that have been identified that have been shown to indicate a review is spam such as: [(reference)](reference: http://www.aclweb.org/anthology/P14-1147)
 
 * Using a separate gold standard dataset of honest and deceptive reviews to train with instead of using approximations from the dataset
@@ -908,10 +729,11 @@ assume that the user are not allowed to perform any operations except
 exploring. Hereby we only grant `SELECT` privilege to the first group of
 user, which we call `user1`:
 
-          DROP USER IF EXISTS 'user1'@'%';
-          CREATE USER user1;
-          GRANT SELECT ON yelp_db.* TO 'user1'@'%';
-        
+```sql
+DROP USER IF EXISTS 'user1';
+CREATE USER user1;
+GRANT SELECT ON yelp_db.* TO 'user1';
+```        
 
 ### 2.1.3 Group 2
 
@@ -923,15 +745,16 @@ table, `UPDATE` on certain columns in the business table, and table-wise
 `UPDATE` on user table. The SQL query is shown as follows, similarly we
 call this `user2`:
 
-          DROP USER IF EXISTS 'user2'@'%';
-          CREATE USER user2;
-          GRANT SELECT ON yelp_db.* TO 'user2'@'%';
-          GRANT INSERT ON yelp_db.review TO 'user2'@'%';
-          GRANT INSERT ON yelp_db.tip TO 'user2'@'%';
-          GRANT UPDATE (stars) ON yelp_db.business TO 'user2'@'%';
-          GRANT UPDATE (review_count) ON yelp_db.business TO 'user2'@'%';
-          GRANT UPDATE ON yelp_db.user TO 'user2'@'%';
-        
+```sql
+DROP USER IF EXISTS 'user2'; 
+CREATE USER user2;
+GRANT SELECT ON yelp_db.* TO 'user2';
+GRANT INSERT ON yelp_db.review TO 'user2';
+GRANT INSERT ON yelp_db.tip TO 'user2';
+GRANT UPDATE (stars) ON yelp_db.business TO 'user2';
+GRANT UPDATE (review_count) ON yelp_db.business TO 'user2';
+GRANT UPDATE ON yelp_db.user TO 'user2';
+```
 
 ### 2.1.4 Group 3
 
@@ -940,10 +763,11 @@ logged in so they are not expected to change any contents in the
 database. Therefore, we only add some view-related privileges to this
 group of users besides those granted to group 1:
 
-          DROP USER IF EXISTS 'user3'@'%';
-          CREATE USER user3;
-          GRANT SELECT, CREATE VIEW, SHOW VIEW ON yelp_db.* TO 'user3'@'%';
-        
+```sql
+DROP USER IF EXISTS 'user3';
+CREATE USER user3;
+GRANT SELECT, CREATE VIEW, SHOW VIEW ON yelp_db.* TO 'user3';
+```        
 
 ### 2.1.5 Group 4
 
@@ -954,14 +778,15 @@ need to perform automated operations, query optimization or concurrency
 control, we also grant them with view, routine(function, procedure),
 index and lock permissions. The SQL queries are as follows:
 
-          DROP USER IF EXISTS 'user4'@'%';
-          CREATE USER user4;
-          GRANT ALTER ROUTINE, CREATE ROUTINE, EXECUTE, # routine related
-          CREATE VIEW, SHOW VIEW, # view related
-          CREATE, ALTER, INDEX, REFERENCES, # tables, indexes and keys
-          DELETE, DROP, INSERT, SELECT, UPDATE # basic operations including IUD
-          ON yelp_db.* TO 'user4'@'%';
-        
+```sql
+DROP USER IF EXISTS 'user4';
+CREATE USER user4;
+GRANT ALTER ROUTINE, CREATE ROUTINE, EXECUTE, # routine related
+CREATE VIEW, SHOW VIEW, # view related
+CREATE, ALTER, INDEX, REFERENCES, # tables, indexes and keys
+DELETE, DROP, INSERT, SELECT, UPDATE # basic operations including IUD
+ON yelp_db.* TO 'user4';
+```        
 
 ### 2.1.6 Group 5
 
@@ -972,8 +797,9 @@ user. In practical use only these two operations should be done using
 root user in order to prevent abuse or unexpected threats to the
 database. The SQL queries are as follows:
 
-          DROP USER IF EXISTS 'user5'@'%';
-          CREATE USER user5;
-          GRANT ALL ON yelp_db.* TO 'user5'@'%';
-        
+```sql
+DROP USER IF EXISTS 'user5';
+CREATE USER user5;
+GRANT ALL ON yelp_db.* TO 'user5';
+```  
 
