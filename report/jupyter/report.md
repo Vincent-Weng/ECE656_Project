@@ -1,4 +1,18 @@
 
+## Table of contents
+### Part 0. General settings
+This part explains the general running environment of this project and how the codes are organized.
+### Part I. Data processing
+* Part I - 1.1 Database structure
+	- To start we did a basic analysis of the database configuration, including sketching the Entity-Relationship Diagram and the relational model diagram.
+* Part I - 1.2 Data cleaning
+	- Sanity and consistency checks are performed in this part. The illegal data are removed from the database or updated. It also includes a comparion of sanity checking queries run time between indexed and unindexed database.
+* Part I - 1.3 Data analysis
+	 - In this part we looked into the factors which affect the likelihood that a review is spam. Also, running time comparison is performed on the related analysis SQL queries.
+
+### Part II. User control
+Given 5 different groups of users, we determined the least permissions they need on the database to conduct their work, and finished the granting privilege queries on this yelp database.
+
 ## Part 0. General settings
 
 This report is written in Jupyter Notebook, and all SQL queries are exectuted as python script. Therefore, it follows the sequence of code executing, and all codes share the same namespace. 
@@ -437,6 +451,30 @@ While classifiers for spam emails are quite well established, spam classifiers f
 * Look for spacial details in a review to indicate honesty (ex. terms such as “bathroom”) while deceptive reviews will talk about general concepts such as why or with whom they went to the hotel
 * Using Bayesian learning to analyze multiple of these metrics together to draw a more definitive conclusion
 * Checking for if there are many grammatical and spelling mistakes 
+
+### 1.3.5 Timing analysis
+
+Here are the running time for the two sql queries used in the analysis part:
+
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/analysis_query_1_indexed.png" width="800">
+</div>
+
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/analysis_query_2_indexed.png" width="800">
+</div>
+
+And here are the time for not indexed database:
+
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/analysis_query_1.png" width="800">
+</div>
+
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/analysis_query_2.png" width="800">
+</div>
+
+It can be found that indexes speed the query execution up by amazingly at least 2000%. These two queries include long joining operations, which probably is the reason for such a huge improvement.
 
 ## Part II. 2.1 User control
 

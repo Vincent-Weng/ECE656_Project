@@ -9,6 +9,8 @@
 
 
 <style type="text/css">
+.pagebreak { page-break-before: always; }
+
 @font-face {
     font-family: 'CM';
     src: local('CMU Serif')
@@ -18,7 +20,7 @@ body {
 	font:18px Helvetica;
 	color:black;
 	line-height:1.3em;
-	background-color: #F8F8F8;
+	background-color: #FFFFFF;
 	padding: 0.7em;
 }
 p {
@@ -108,12 +110,198 @@ kbd {
 }
 </style>
 
+<style type="text/css">
+/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #f8f8f2;
+	background: none;
+	text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #272822;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: slategray;
+}
+
+.token.punctuation {
+	color: #f8f8f2;
+}
+
+.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #f92672;
+}
+
+.token.boolean,
+.token.number {
+	color: #ae81ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #a6e22e;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
+	color: #f8f8f2;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.function {
+	color: #e6db74;
+}
+
+.token.keyword {
+	color: #66d9ef;
+}
+
+.token.regex,
+.token.important {
+	color: #fd971f;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+</style>
+
+<style type="text/css">
+div.prism-show-language {
+	position: relative;
+}
+
+div.prism-show-language > div.prism-show-language-label {
+	color: black;
+	background-color: #CFCFCF;
+	display: inline-block;
+	position: absolute;
+	bottom: auto;
+	left: auto;
+	top: 0;
+	right: 0;
+	width: auto;
+	height: auto;
+	font-size: 0.9em;
+	border-radius: 0 0 0 5px;
+	padding: 0 0.5em;
+	text-shadow: none;
+	z-index: 1;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	-webkit-transform: none;
+	-moz-transform: none;
+	-ms-transform: none;
+	-o-transform: none;
+	transform: none;
+}
+</style>
+
 
 </head>
 
 <body>
 
-<h2 id="toc_0">Part 0. General settings</h2>
+<h2 id="toc_0">Table of contents</h2>
+
+<h3 id="toc_1">Part 0. General settings</h3>
+
+<p>This part explains the general running environment of this project and how the codes are organized.</p>
+
+<h3 id="toc_2">Part I. Data processing</h3>
+
+<ul>
+<li>Part I - 1.1 Database structure
+
+<ul>
+<li>To start we did a basic analysis of the database configuration, including sketching the Entity-Relationship Diagram and the relational model diagram.</li>
+</ul></li>
+<li>Part I - 1.2 Data cleaning
+
+<ul>
+<li>Sanity and consistency checks are performed in this part. The illegal data are removed from the database or updated. It also includes a comparion of sanity checking queries run time between indexed and unindexed database.</li>
+</ul></li>
+<li>Part I - 1.3 Data analysis
+
+<ul>
+<li>In this part we looked into the factors which affect the likelihood that a review is spam. Also, running time comparison is performed on the related analysis SQL queries.</li>
+</ul></li>
+</ul>
+
+<h3 id="toc_3">Part II. User control</h3>
+
+<p>Given 5 different groups of users, we determined the least permissions they need on the database to conduct their work, and finished the granting privilege queries on this yelp database.</p>
+
+<h2 class="pagebreak">Part 0. General settings</h2>
 
 <p>This report is written in Jupyter Notebook, and all SQL queries are exectuted as python script. Therefore, it follows the sequence of code executing, and all codes share the same namespace. </p>
 
@@ -177,7 +365,7 @@ def executeQuery(conn, query, commit=False, returnResult=True):
 
 yelp_conn = open_conn()</code></pre></div>
 
-<h2 id="toc_1">Part I - 1.1 Database structure</h2>
+<h2 id="toc_5">Part I - 1.1 Database structure</h2>
 
 <p>Here is the Entity-Relationship diagram of the database. The attributes are not shown because there are too many for some of the tables. Instead, they can be find in the following figure illustrating the relational model.
 <div style="text-align:center">
@@ -190,7 +378,7 @@ yelp_conn = open_conn()</code></pre></div>
 <img src="../../RelationalModel.png" width="800">
 </div>
 
-<h2 id="toc_2">Part I - 1.2 Data cleaning</h2>
+<h2 id="toc_6">Part I - 1.2 Data cleaning</h2>
 
 <p>First some sanity checks and consistency checks were performed on the yelp database. The data in the database should follow rules and should be consistent with each other. After studying the relationship models in of it, we perfomed the following checks and cleaning:
 - Logical time checks: review or becoming an elite member can not occur before yelp was founded or from the future. 
@@ -198,7 +386,7 @@ yelp_conn = open_conn()</code></pre></div>
 
 <p>We first got the queries ready, then came up with the following indices to accelerate the running of queries. As we are going to time the execution commands, they are added before further discussion, as shown in 1.2.1. After that in 1.2.2, we will introduce the checking queries and the measures taken to deal with the inconsistency and broken data. </p>
 
-<h3 id="toc_3">1.2.1 Indexing the sanity check queries</h3>
+<h3 id="toc_7">1.2.1 Indexing the sanity check queries</h3>
 
 <p>To allow for faster queries additional indices were added to some tables in the database. This includes:</p>
 
@@ -259,9 +447,9 @@ index_5_2 =  &quot;create index idx_opening_time on checkin_new(checkin_time)&qu
 executeQuery(yelp_conn, query_5_1)
 executeQuery(yelp_conn, query_5_2)</code></pre></div>
 
-<h3 id="toc_4">1.2.2 Sanity/consistency check and cleaning</h3>
+<h3 id="toc_8">1.2.2 Sanity/consistency check and cleaning</h3>
 
-<h4 id="toc_5">1. Check that no review is from the future or before Yelp&#39;s founding</h4>
+<h4 id="toc_9">1. Check that no review is from the future or before Yelp&#39;s founding</h4>
 
 <div><pre><code class="language-python">query_1 = &quot;SELECT id, date FROM review WHERE unix_timestamp(date) &lt;= unix_timestamp(&#39;2004-10-01&#39;)\
            OR unix_timestamp(date) &gt;= unix_timestamp(&#39;2018-01-01&#39;);&quot;
@@ -291,7 +479,7 @@ Wall time: 2.75 s
 
 executeQuery(yelp_conn, clean_1)</code></pre></div>
 
-<h4 id="toc_6">2. Can&#39;t leave a review dated before account creation</h4>
+<h4 id="toc_10">2. Can&#39;t leave a review dated before account creation</h4>
 
 <div><pre><code class="language-python">query_2 =  &quot;SELECT user.id, user.yelping_since, review.date\
             FROM (user INNER JOIN review ON user.id = review.user_id)\
@@ -334,7 +522,7 @@ displayResult(result_2[:5], heading_2)</code></pre></div>
 
 executeQuery(yelp_conn, clean_2)</code></pre></div>
 
-<h4 id="toc_7">3. Can&#39;t be elite in a year before their account was made</h4>
+<h4 id="toc_11">3. Can&#39;t be elite in a year before their account was made</h4>
 
 <div><pre><code class="language-python">query_3 =  &quot;SELECT user.id, user.yelping_since AS Date_of_yelping, elite_years.year AS Year_of_Elite\
             FROM (user INNER JOIN elite_years ON user.id = elite_years.user_id)\
@@ -363,7 +551,7 @@ displayResult(result_3[:5], heading_3)</code></pre></div>
 </tbody>
 </table>
 
-<h4 id="toc_8">4. Can&#39;t checkin outside open hours</h4>
+<h4 id="toc_12">4. Can&#39;t checkin outside open hours</h4>
 
 <div><pre><code class="language-python">query_4 = &quot;SELECT COUNT(*) FROM checkin JOIN (SELECT hours.business_id, SUBSTRING_INDEX(hours, &#39;|&#39;, 1)\
           AS day_of_week, SUBSTRING_INDEX(SUBSTRING_INDEX(hours, &#39;|&#39;, - 1), &#39;-&#39;, 1) AS opening_time,\
@@ -376,7 +564,7 @@ displayResult(result_3[:5], heading_3)</code></pre></div>
 %time result_4 = executeQuery(yelp_conn, query_4)
 result_4[0]</code></pre></div>
 
-<div><pre><code class="language-python">CPU times: user 5.56 ms, sys: 3.52 ms, total: 9.08 ms
+<div><pre><code class="language-none">CPU times: user 5.56 ms, sys: 3.52 ms, total: 9.08 ms
 Wall time: 5min 14s
 (55493,)</code></pre></div>
 
@@ -386,7 +574,7 @@ Wall time: 5min 14s
 
 <p>This also shows the need within the database for the date column in the checkin and the hours column in the hours table to be normalized by splitting into date, opening time and closing time columns as this would save computation time having to perform substring_index computations on every row. No change is made to the database to correct this because it may sometimes happen since the business may change its open hours without updating that on yelp.</p>
 
-<h4 id="toc_9">5. <code>User.review_count</code> cannot be less than the sum of the number of reviews by a user</h4>
+<h4 id="toc_13">5. <code>User.review_count</code> cannot be less than the sum of the number of reviews by a user</h4>
 
 <div><pre><code class="language-python">query_5 = &quot;select count(*) from user join (select count(user_id) as countedReviews, user_id from\
            review group by user_id) as a on a.user_id = user.id where a.countedReviews &gt; review_count;&quot;
@@ -413,7 +601,7 @@ clean_5_2 = &quot;UPDATE user SET review_count = (SELECT count\
 executeQuery(yelp_conn, clean_5_1)
 executeQuery(yelp_conn, clean_5_2)</code></pre></div>
 
-<h4 id="toc_10">6. Cannot be Elite in an invalid year</h4>
+<h4 id="toc_14">6. Cannot be Elite in an invalid year</h4>
 
 <p>Invalid years include ones before 2004, years in the future or years they didn&#39;t post a review, tip or photo.</p>
 
@@ -440,198 +628,9 @@ Wall time: 2min 23s
     
 executeQuery(yelp_conn, clean_6)</code></pre></div>
 
-<h2 id="toc_11">Part I - 1.3 Data Analysis</h2>
+<h2 id="toc_15">Part I - 1.3 Data Analysis</h2>
 
-<div><pre><code class="language-python">import project_funclib
-
-import pymysql
-import nltk
-import pickle
-from matplotlib import pyplot
-from random import shuffle
-from pprint import pprint
-
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from nltk.classify.scikitlearn import SklearnClassifier
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
-
-
-def find_features(review, frequent_words):
-    &#39;&#39;&#39;Find the which words in the review are contained within the word_features
-    what were determined from the movie review dataset&#39;&#39;&#39;
-    words = review.split()
-    features = dict.fromkeys(frequent_words, False)
-    for word in words:
-        if word in frequent_words:
-            features[word] = True
-    return features
-
-def isEnglish(text):
-    try:
-        text.encode(encoding=&#39;utf-8&#39;).decode(&#39;ascii&#39;)
-    except UnicodeDecodeError:
-        return False
-    else:
-        return True
-
-
-def build_dataset_from_query(query, documents, all_words, label):
-    &#39;&#39;&#39;Takes in the raw data from the SQL query and performs POS tagging as well as
-    cleans the data to remove foreign language reviews and symbols&#39;&#39;&#39;
-    for review in project_funclib.executeQuery(query):
-        text = review[0].replace(&#39;-&#39;, &#39; &#39;).replace(&#39;/&#39;, &#39; &#39;).replace(&#39;.&#39;, &#39; &#39;).lower()
-        if not isEnglish(text):
-            continue
-        documents.append((text, label))
-        words = nltk.tokenize.word_tokenize(text)
-        POS = nltk.tag.pos_tag(words)
-        #  [print(word, tag) for word, tag in POS if tag.startswith(&#39;J&#39;)]
-        [all_words.append(w.lower()) for w, tag in POS if tag.startswith((&#39;J&#39;, &#39;R&#39;))]
-    return
-
-
-def build_feature_set(spam_query, ham_query):
-    &#39;&#39;&#39;Takes in the raw data from the SQL query and formats it correctly for
-    the NLTK classifier&#39;&#39;&#39;
-    documents = []
-    all_words = []
-    build_dataset_from_query(spam_query, documents, all_words, &#39;spam&#39;)
-    build_dataset_from_query(ham_query, documents, all_words, &#39;ham&#39;)
-    # list of all words of interest from reviews (determined by select_tags
-    all_words = nltk.FreqDist(all_words)
-    # Select the top N most frequent words from this list to select as words
-    # that indicate a review is spam
-    word_features = set(list(all_words.keys())[:5000])
-    feature_sets = [(find_features(review, word_features), category) for
-                    (review, category) in documents]
-    shuffle(feature_sets)
-    return feature_sets</code></pre></div>
-
-<div><pre><code class="language-python">def build_sk_feature_set(spam_query, ham_query):
-    &#39;&#39;&#39;Takes in the raw data from the SQL query and formats it correctly for
-    the sklearn classifiers&#39;&#39;&#39;
-    documents = []
-    all_words = []
-    y = []
-    orpus = []
-    build_dataset_from_query(spam_query, documents, all_words, &#39;spam&#39;)
-    build_dataset_from_query(ham_query, documents, all_words, &#39;ham&#39;)
-    for text, label in documents:
-        y.append(label)
-        orpus.append(text)
-    cv = CountVectorizer(max_features=5000)
-    x = cv.fit_transform(orpus).toarray()
-    le = LabelEncoder()
-    y = le.fit_transform(y)
-    return x, y
-
-
-def naive_bayes_classifier(training_set, testing_set):
-    classifier = nltk.NaiveBayesClassifier.train(training_set)
-    accuracy = nltk.classify.accuracy(classifier, testing_set)
-    classifier.show_most_informative_features(5)
-    return accuracy
-
-
-def gaussianNB_classifier(X_train, X_test, y_train, y_test):
-    &#39;&#39;&#39;Applies sklearn&#39;s gaussianNB algorithm to the feature set&#39;&#39;&#39;
-
-    gaussian_nb_classifier = GaussianNB()
-    gaussian_nb_classifier.fit(X_train, y_train)
-    pred = gaussian_nb_classifier.predict(X_test)
-    print(&#39;gaussianNB Accuracy score: {}&#39;.format(accuracy_score(y_test, pred)))
-    print(&#39;gaussianNB Precision score: {}&#39;.format(precision_score(y_test, pred)))
-    print(&#39;gaussianNB Recall score: {}&#39;.format(recall_score(y_test, pred)))
-    print(&#39;gaussianNB F1 score: {}&#39;.format(f1_score(y_test, pred)))
-
-
-def random_forest_classifier(X_train, X_test, y_train, y_test):
-    &#39;&#39;&#39;Applies sklearn&#39;s random forest algorithm to the feature set&#39;&#39;&#39;
-
-    classifier1 = RandomForestClassifier(n_estimators=15, criterion=&#39;entropy&#39;)
-    classifier1.fit(X_train, y_train)
-    predRF = classifier1.predict(X_test)
-    print(&#39;RF Accuracy score: {}&#39;.format(accuracy_score(y_test, predRF)))
-    print(&#39;RF Precision score: {}&#39;.format(precision_score(y_test, predRF)))
-    print(&#39;RF Recall score: {}&#39;.format(recall_score(y_test, predRF)))
-    print(&#39;RF F1 score: {}&#39;.format(f1_score(y_test, predRF)))
-
-
-def train_classifiers(category, ages, num_results, num_reviews):
-    &#39;&#39;&#39;Executes the SQL queries to get the necessary data and calls the
-    classification algorithms on the data after it is formatted correctly&#39;&#39;&#39;
-
-    spam_query = &quot;SELECT text FROM (SELECT text, business_id, user_id, date from review \
-            WHERE useful = 0 AND funny = 0 AND cool = 0) as c JOIN\
-            (SELECT id, yelping_since from user where average_stars = (5 or 1) AND review_count = 1)\
-            AS a ON a.id=c.user_id JOIN (select business_id from category WHERE\
-            category = &#39;%s&#39;) as b USING(business_id) WHERE\
-            c.date - a.yelping_since BETWEEN %d and %d limit %d;&quot;\
-            % (category, ages[0]*100000000000, ages[1]*100000000000, num_results)
-    ham_query = &quot;SELECT text FROM review JOIN (select id from user where\
-            review_count &gt; %d) as a ON a.id=review.user_id JOIN (SELECT\
-            business_id from category where category=&#39;%s&#39;) as b on\
-            review.business_id=b.business_id limit %d&quot; % (num_reviews, category, num_results)
-    # Build the feature sets from the reviews returned by each query
-    # They will each be labeled spam or ham (ham are not spam)
-    feature_sets = build_feature_set(spam_query, ham_query)
-    len_data = int(len(feature_sets) * 0.5)
-    training_set = feature_sets[:len_data]
-    testing_set = feature_sets[len_data:]
-    # These are additional classification algorithms that were tried but
-    # removed to speed up computation time
-    #  x, y = build_sk_feature_set(spam_query, ham_query)
-    #  X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.30)
-    #  random_forest_classifier(X_train, X_test, y_train, y_test)
-    #  gaussianNB_classifier(X_train, X_test, y_train, y_test)
-    return naive_bayes_classifier(training_set, testing_set)
-
-
-num_results = 1000  # Total number of results to analyze from each query to speed up execution
-age = (0, 0)  # The time between account creation and the first review for accounts with 1 review
-category = &#39;Restaurants&#39;  # The category of businesses to analyze
-num_reviews = 10  # The number of reviews an account has to leave to be classified as not spam
-
-# Analyze the number of reviews between 2 and 101 as the minimum required to not be spam
-accuracy = []
-for num_reviews in range(2, 21, 2):
-    accuracy.append(train_classifiers(category, age, num_results, num_reviews))
-
-pyplot.figure(1)
-pyplot.plot(range(0, 101, 10), accuracy)
-pyplot.xlabel(&#39;review_count by User&#39;)
-pyplot.ylabel(&#39;Spam Detection Accuracy&#39;)
-
-# Analyze ages of reviews between 0 and 7 days, with 0 having the biggest population
-accuracy = []
-ages_high = [0]
-ages_low = [0]
-[ages_high.append(i) for i in range(6)]
-[ages_low.append(i) for i in range(1, 7)]
-for age_low, age_high in zip(ages_low, ages_high):
-    ages = (age_low, age_high)
-    accuracy.append(train_classifiers(category, ages, num_results, num_reviews))
-
-pyplot.figure(2)
-pyplot.plot(ages_low, accuracy)
-pyplot.xlabel(&#39;Time Between Account Creation and First Review (days)&#39;)
-pyplot.ylabel(&#39;Spam Detection Accuracy&#39;)
-
-# Analyze the accuracy of spam detection across different categories of businesses
-accuracy = []
-categories = [&#39;Restaurants&#39;, &#39;Health &amp; Medical&#39;, &#39;Shopping&#39;, &#39;Beauty &amp; Spas&#39;,
-              &#39;Home Services&#39;, &#39;Nightlife&#39;, &#39;Automotive&#39;]
-for category in categories:
-    accuracy.append(train_classifiers(category, age, num_results, num_reviews))
-
-pyplot.figure(3)
-pyplot.plot(categories, accuracy)
-pyplot.xlabel(&#39;Business Category&#39;)
-pyplot.ylabel(&#39;Spam Detection Accuracy&#39;)</code></pre></div>
+<h3 id="toc_16">1.3.1 General results</h3>
 
 <p>Conditions for determining which reviews are SPAM:<br>
 Accuracy with WHERE review<em>count = 1: 61%<br>
@@ -649,12 +648,15 @@ Change query to only include restaurants: 83%
 Change query to only include hotels: 85%
 Change query to only include restaurants: 85%</p>
 
-<h3 id="toc_12">Methods</h3>
+<h3 id="toc_17">1.3.2 Methods</h3>
 
-<p>Now that we&#39;re confident that the data is sufficiently cleaned as to not produce erroneous results from our analysis outside of those of interest, we can begin performing the actual analysis of trends in the data. The trend that was analyzed is the affect different attributes about users and their reviews have on the likelihood that their review is spam. These attributes include the type of business being reviewed, the ratings of the reviews left by users, the average<em>stars of the user, the time between account creation and  and the review</em>count of the user. In order to determine if a given query returns reviews that are spam a machine learning classifier was used that implemented a bag-of-words model and applied a naive Bayes and random forest classifier onto this model. The metric we looked at to determine the liklihood that a review is spam is the accuracy of the classifier in classifying the suspected spam reviews when mixed with reviews that are not spam.<br>
-The bag-of-words model takes each spam and not spam review and looks at the words that occur most frequently in the reviews to use those as features. In this case we looked at the top 5000 most occuring adjectives and adverbs in the review to use as features. We found the adjectives and adverbs using NLTK&#39;s part of speech tagging on every review and decided to go with these parts of speech because they are the words of interest in reviews in general and provide and easy way to eliminate frequently occuring words in general that are not specific to reviews (ex. &#39;the&#39; and &#39;it&#39;).<br>
-Classification was performed initially using only a naive Bayes classifier that is built into the NLTK library which uses Bayes theorem to determine the probability that a review is spam given the probability that each feature (word) in the review is spam. If this probability is over 50% then that review is classified as spam. Later on other classificiation algorithms were tried to see if a better classification accuracy could be achieved such as scikit-learn&#39;s random forest classifier and gaussian naive Bayes, however in general these algorithms performed worse than NLTK&#39;s naive Bayes classifier so it was the only one used to save computation time.<br>
-Accuracy of the spam prediction was determined by splitting the shuffled spam and ham reviews in half, with one half becoming the training set to train the classifier on, and the other half becoming the testing set which the spam classifier is tested on to determine its accuracy.
+<p>Now that we&#39;re confident that the data is sufficiently cleaned as to not produce erroneous results from our analysis outside of those of interest, we can begin performing the actual analysis of trends in the data. The trend that was analyzed is the affect different attributes about users and their reviews have on the likelihood that their review is spam. These attributes include the type of business being reviewed, the ratings of the reviews left by users, the average<em>stars of the user, the time between account creation and  and the review</em>count of the user. In order to determine if a given query returns reviews that are spam a machine learning classifier was used that implemented a bag-of-words model and applied a naive Bayes and random forest classifier onto this model. The metric we looked at to determine the liklihood that a review is spam is the accuracy of the classifier in classifying the suspected spam reviews when mixed with reviews that are not spam.  </p>
+
+<p>The bag-of-words model takes each spam and not spam review and looks at the words that occur most frequently in the reviews to use those as features. In this case we looked at the top 5000 most occuring adjectives and adverbs in the review to use as features. We found the adjectives and adverbs using NLTK&#39;s part of speech tagging on every review and decided to go with these parts of speech because they are the words of interest in reviews in general and provide and easy way to eliminate frequently occuring words in general that are not specific to reviews (ex. &#39;the&#39; and &#39;it&#39;).  </p>
+
+<p>Classification was performed initially using only a naive Bayes classifier that is built into the NLTK library which uses Bayes theorem to determine the probability that a review is spam given the probability that each feature (word) in the review is spam. If this probability is over 50% then that review is classified as spam. Later on other classificiation algorithms were tried to see if a better classification accuracy could be achieved such as scikit-learn&#39;s random forest classifier and gaussian naive Bayes, however in general these algorithms performed worse than NLTK&#39;s naive Bayes classifier so it was the only one used to save computation time.  </p>
+
+<p>Accuracy of the spam prediction was determined by splitting the shuffled spam and ham reviews in half, with one half becoming the training set to train the classifier on, and the other half becoming the testing set which the spam classifier is tested on to determine its accuracy.
 The metrics analyzed were:</p>
 
 <ul>
@@ -664,23 +666,27 @@ The metrics analyzed were:</p>
 <li>number of results - the number of rows from each query that were analyzed, this was left fixed at 1000 for speed</li>
 </ul>
 
-<h3 id="toc_13">Results</h3>
+<h3 id="toc_18">1.3.3 Results</h3>
 
 <div style="text-align:center">
 <img src="../../pythonAnalysis/figures/1_review_stars.png" width="800">
 </div>
 
-<p>It was found that the longer someone waited to leave their first review from account creation, the less likely it was to be spam. This was expected as any bot account that is created to simply boost up the score of a restaurant would leave a review immediately after creation, as opposed to a real user that may make their account and then not leave a review on a business until they go to one a while later. The downside of this metric is that there are also many real used that create account while at a business and leave an overly positive or negative review because its fresh in their memory.
+<p>It was found that the longer someone waited to leave their first review from account creation, the less likely it was to be spam. This was expected as any bot account that is created to simply boost up the score of a restaurant would leave a review immediately after creation, as opposed to a real user that may make their account and then not leave a review on a business until they go to one a while later. The downside of this metric is that there are also many real used that create account while at a business and leave an overly positive or negative review because its fresh in their memory.</p>
+
 <div style="text-align:center">
-<img src="../../pythonAnalysis/figures/categories.png" width="800"><br>
+<img src="../../pythonAnalysis/figures/categories.png" width="800">  
 </div>
-Next, it was found that amoungst the different categories of businesses that Automotive businesses were the least likely to have spam reviews, while shopping locations were the most. Analyzing this further reveals that on average the automotive customers were more likely to have accounts with only one review for the automotive business, suggesting automotive people are less likely to be active users versus shopping locations which have legitimate users that are more active Yelp users so the ones with only one review are more likely to be spam.<br>
+
+<p>Next, it was found that amoungst the different categories of businesses that Automotive businesses were the least likely to have spam reviews, while shopping locations were the most. Analyzing this further reveals that on average the automotive customers were more likely to have accounts with only one review for the automotive business, suggesting automotive people are less likely to be active users versus shopping locations which have legitimate users that are more active Yelp users so the ones with only one review are more likely to be spam.  </p>
+
 <div style="text-align:center">
 <img src="../../pythonAnalysis/figures/avg_stars.png" width="800">
 </div>
-It was also found that the average<em>stars of the users&#39; account influences the likelihood that their reviews are spam in that if a users&#39; average</em>stars is 5 or 1 versus if their average_stars is some other value showing that they&#39;ve given other reviews besides just the top score or the lowest. This metric would miss spam users that use their account for spamming both high and low, instead of only doing one or the other.</p>
 
-<h3 id="toc_14">Future Work</h3>
+<p>It was also found that the average<em>stars of the users&#39; account influences the likelihood that their reviews are spam in that if a users&#39; average</em>stars is 5 or 1 versus if their average_stars is some other value showing that they&#39;ve given other reviews besides just the top score or the lowest. This metric would miss spam users that use their account for spamming both high and low, instead of only doing one or the other.</p>
+
+<h3 id="toc_19">1.3.4 Future Work</h3>
 
 <p>While classifiers for spam emails are quite well established, spam classifiers for reviews are more challenging because they lack many of the features that are indicative of spam such as including links or using language that suggests that the person is trying to sell something. However, this is an active area of research and there are other more complex features that have been identified that have been shown to indicate a review is spam such as: <a href="reference:%20http://www.aclweb.org/anthology/P14-1147">(reference)</a></p>
 
@@ -691,9 +697,33 @@ It was also found that the average<em>stars of the users&#39; account influences
 <li>Checking for if there are many grammatical and spelling mistakes </li>
 </ul>
 
-<h2 id="toc_15">Part II. 2.1 User control</h2>
+<h3 id="toc_20">1.3.5 Timing analysis</h3>
 
-<h3 id="toc_16">2.1.1 Description of the problem</h3>
+<p>Here are the running time for the two sql queries used in the analysis part:</p>
+
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/analysis_query_1_indexed.png" width="800">
+</div>
+
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/analysis_query_2_indexed.png" width="800">
+</div>
+
+<p>And here are the time for not indexed database:</p>
+
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/analysis_query_1.png" width="800">
+</div>
+
+<div style="text-align:center">
+<img src="../../pythonAnalysis/figures/analysis_query_2.png" width="800">
+</div>
+
+<p>It can be found that indexes speed the query execution up by amazingly at least 2000%. These two queries include long joining operations, which probably is the reason for such a huge improvement.</p>
+
+<h2 id="toc_21">Part II. 2.1 User control</h2>
+
+<h3 id="toc_22">2.1.1 Description of the problem</h3>
 
 <p>In real applications, the Yelp database is expected to be visited by
 different groups of people, including customers (users), data analyst
@@ -966,7 +996,7 @@ group.</p>
  </tr>
 </table>
 
-<h3 id="toc_17">2.1.2 Group 1</h3>
+<h3 id="toc_23">2.1.2 Group 1</h3>
 
 <p>For the first group of users, they only browse information about the
 business, including their opening hours, stars, reviews, without signing
@@ -979,11 +1009,11 @@ assume that the user are not allowed to perform any operations except
 exploring. Hereby we only grant <code>SELECT</code> privilege to the first group of
 user, which we call <code>user1</code>:</p>
 
-<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user1&#39;@&#39;%&#39;;
+<div><pre><code class="language-sql">DROP USER IF EXISTS &#39;user1&#39;;
 CREATE USER user1;
-GRANT SELECT ON yelp_db.* TO &#39;user1&#39;@&#39;%&#39;;</code></pre></div>
+GRANT SELECT ON yelp_db.* TO &#39;user1&#39;;</code></pre></div>
 
-<h3 id="toc_18">2.1.3 Group 2</h3>
+<h3 id="toc_24">2.1.3 Group 2</h3>
 
 <p>For the second type of user, they are different from casual users in
 that they may leave reviews or tips on a business. They are logged-in
@@ -993,27 +1023,27 @@ table, <code>UPDATE</code> on certain columns in the business table, and table-w
 <code>UPDATE</code> on user table. The SQL query is shown as follows, similarly we
 call this <code>user2</code>:</p>
 
-<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user2&#39;@&#39;%&#39;;
+<div><pre><code class="language-sql">DROP USER IF EXISTS &#39;user2&#39;; 
 CREATE USER user2;
-GRANT SELECT ON yelp_db.* TO &#39;user2&#39;@&#39;%&#39;;
-GRANT INSERT ON yelp_db.review TO &#39;user2&#39;@&#39;%&#39;;
-GRANT INSERT ON yelp_db.tip TO &#39;user2&#39;@&#39;%&#39;;
-GRANT UPDATE (stars) ON yelp_db.business TO &#39;user2&#39;@&#39;%&#39;;
-GRANT UPDATE (review_count) ON yelp_db.business TO &#39;user2&#39;@&#39;%&#39;;
-GRANT UPDATE ON yelp_db.user TO &#39;user2&#39;@&#39;%&#39;;</code></pre></div>
+GRANT SELECT ON yelp_db.* TO &#39;user2&#39;;
+GRANT INSERT ON yelp_db.review TO &#39;user2&#39;;
+GRANT INSERT ON yelp_db.tip TO &#39;user2&#39;;
+GRANT UPDATE (stars) ON yelp_db.business TO &#39;user2&#39;;
+GRANT UPDATE (review_count) ON yelp_db.business TO &#39;user2&#39;;
+GRANT UPDATE ON yelp_db.user TO &#39;user2&#39;;</code></pre></div>
 
-<h3 id="toc_19">2.1.4 Group 3</h3>
+<h3 id="toc_25">2.1.4 Group 3</h3>
 
 <p>Business analysts are special casual users. Here we assume they are not
 logged in so they are not expected to change any contents in the
 database. Therefore, we only add some view-related privileges to this
 group of users besides those granted to group 1:</p>
 
-<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user3&#39;@&#39;%&#39;;
+<div><pre><code class="language-sql">DROP USER IF EXISTS &#39;user3&#39;;
 CREATE USER user3;
-GRANT SELECT, CREATE VIEW, SHOW VIEW ON yelp_db.* TO &#39;user3&#39;@&#39;%&#39;;</code></pre></div>
+GRANT SELECT, CREATE VIEW, SHOW VIEW ON yelp_db.* TO &#39;user3&#39;;</code></pre></div>
 
-<h3 id="toc_20">2.1.5 Group 4</h3>
+<h3 id="toc_26">2.1.5 Group 4</h3>
 
 <p>Group 4 corresponds to normal developers. These people are in charge of
 the visiting, development and maintenance of database. Therefore we
@@ -1022,15 +1052,15 @@ need to perform automated operations, query optimization or concurrency
 control, we also grant them with view, routine(function, procedure),
 index and lock permissions. The SQL queries are as follows:</p>
 
-<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user4&#39;@&#39;%&#39;;
+<div><pre><code class="language-sql">DROP USER IF EXISTS &#39;user4&#39;;
 CREATE USER user4;
 GRANT ALTER ROUTINE, CREATE ROUTINE, EXECUTE, # routine related
 CREATE VIEW, SHOW VIEW, # view related
 CREATE, ALTER, INDEX, REFERENCES, # tables, indexes and keys
 DELETE, DROP, INSERT, SELECT, UPDATE # basic operations including IUD
-ON yelp_db.* TO &#39;user4&#39;@&#39;%&#39;;</code></pre></div>
+ON yelp_db.* TO &#39;user4&#39;;</code></pre></div>
 
-<h3 id="toc_21">2.1.6 Group 5</h3>
+<h3 id="toc_27">2.1.6 Group 5</h3>
 
 <p>Group 5 is the database administrator, so its privilege is all but
 <code>GRANT</code> and <code>PROXY</code> options, which should only be done using the root
@@ -1038,11 +1068,27 @@ user. In practical use only these two operations should be done using
 root user in order to prevent abuse or unexpected threats to the
 database. The SQL queries are as follows:</p>
 
-<div><pre><code class="language-none">DROP USER IF EXISTS &#39;user5&#39;@&#39;%&#39;;
+<div><pre><code class="language-sql">DROP USER IF EXISTS &#39;user5&#39;;
 CREATE USER user5;
-GRANT ALL ON yelp_db.* TO &#39;user5&#39;@&#39;%&#39;;</code></pre></div>
+GRANT ALL ON yelp_db.* TO &#39;user5&#39;;</code></pre></div>
 
 
+
+<script type="text/javascript">
+var _self="undefined"!=typeof window?window:"undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?self:{},Prism=function(){var e=/\blang(?:uage)?-(\w+)\b/i,t=0,n=_self.Prism={util:{encode:function(e){return e instanceof a?new a(e.type,n.util.encode(e.content),e.alias):"Array"===n.util.type(e)?e.map(n.util.encode):e.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/\u00a0/g," ")},type:function(e){return Object.prototype.toString.call(e).match(/\[object (\w+)\]/)[1]},objId:function(e){return e.__id||Object.defineProperty(e,"__id",{value:++t}),e.__id},clone:function(e){var t=n.util.type(e);switch(t){case"Object":var a={};for(var r in e)e.hasOwnProperty(r)&&(a[r]=n.util.clone(e[r]));return a;case"Array":return e.map&&e.map(function(e){return n.util.clone(e)})}return e}},languages:{extend:function(e,t){var a=n.util.clone(n.languages[e]);for(var r in t)a[r]=t[r];return a},insertBefore:function(e,t,a,r){r=r||n.languages;var l=r[e];if(2==arguments.length){a=arguments[1];for(var i in a)a.hasOwnProperty(i)&&(l[i]=a[i]);return l}var o={};for(var s in l)if(l.hasOwnProperty(s)){if(s==t)for(var i in a)a.hasOwnProperty(i)&&(o[i]=a[i]);o[s]=l[s]}return n.languages.DFS(n.languages,function(t,n){n===r[e]&&t!=e&&(this[t]=o)}),r[e]=o},DFS:function(e,t,a,r){r=r||{};for(var l in e)e.hasOwnProperty(l)&&(t.call(e,l,e[l],a||l),"Object"!==n.util.type(e[l])||r[n.util.objId(e[l])]?"Array"!==n.util.type(e[l])||r[n.util.objId(e[l])]||(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,l,r)):(r[n.util.objId(e[l])]=!0,n.languages.DFS(e[l],t,null,r)))}},plugins:{},highlightAll:function(e,t){var a={callback:t,selector:'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'};n.hooks.run("before-highlightall",a);for(var r,l=a.elements||document.querySelectorAll(a.selector),i=0;r=l[i++];)n.highlightElement(r,e===!0,a.callback)},highlightElement:function(t,a,r){for(var l,i,o=t;o&&!e.test(o.className);)o=o.parentNode;o&&(l=(o.className.match(e)||[,""])[1],i=n.languages[l]),t.className=t.className.replace(e,"").replace(/\s+/g," ")+" language-"+l,o=t.parentNode,/pre/i.test(o.nodeName)&&(o.className=o.className.replace(e,"").replace(/\s+/g," ")+" language-"+l);var s=t.textContent,u={element:t,language:l,grammar:i,code:s};if(!s||!i)return n.hooks.run("complete",u),void 0;if(n.hooks.run("before-highlight",u),a&&_self.Worker){var c=new Worker(n.filename);c.onmessage=function(e){u.highlightedCode=e.data,n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(u.element),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},c.postMessage(JSON.stringify({language:u.language,code:u.code,immediateClose:!0}))}else u.highlightedCode=n.highlight(u.code,u.grammar,u.language),n.hooks.run("before-insert",u),u.element.innerHTML=u.highlightedCode,r&&r.call(t),n.hooks.run("after-highlight",u),n.hooks.run("complete",u)},highlight:function(e,t,r){var l=n.tokenize(e,t);return a.stringify(n.util.encode(l),r)},tokenize:function(e,t){var a=n.Token,r=[e],l=t.rest;if(l){for(var i in l)t[i]=l[i];delete t.rest}e:for(var i in t)if(t.hasOwnProperty(i)&&t[i]){var o=t[i];o="Array"===n.util.type(o)?o:[o];for(var s=0;s<o.length;++s){var u=o[s],c=u.inside,g=!!u.lookbehind,h=!!u.greedy,f=0,d=u.alias;u=u.pattern||u;for(var p=0;p<r.length;p++){var m=r[p];if(r.length>e.length)break e;if(!(m instanceof a)){u.lastIndex=0;var y=u.exec(m),v=1;if(!y&&h&&p!=r.length-1){var b=r[p+1].matchedStr||r[p+1],k=m+b;if(p<r.length-2&&(k+=r[p+2].matchedStr||r[p+2]),u.lastIndex=0,y=u.exec(k),!y)continue;var w=y.index+(g?y[1].length:0);if(w>=m.length)continue;var _=y.index+y[0].length,P=m.length+b.length;if(v=3,P>=_){if(r[p+1].greedy)continue;v=2,k=k.slice(0,P)}m=k}if(y){g&&(f=y[1].length);var w=y.index+f,y=y[0].slice(f),_=w+y.length,S=m.slice(0,w),O=m.slice(_),j=[p,v];S&&j.push(S);var A=new a(i,c?n.tokenize(y,c):y,d,y,h);j.push(A),O&&j.push(O),Array.prototype.splice.apply(r,j)}}}}}return r},hooks:{all:{},add:function(e,t){var a=n.hooks.all;a[e]=a[e]||[],a[e].push(t)},run:function(e,t){var a=n.hooks.all[e];if(a&&a.length)for(var r,l=0;r=a[l++];)r(t)}}},a=n.Token=function(e,t,n,a,r){this.type=e,this.content=t,this.alias=n,this.matchedStr=a||null,this.greedy=!!r};if(a.stringify=function(e,t,r){if("string"==typeof e)return e;if("Array"===n.util.type(e))return e.map(function(n){return a.stringify(n,t,e)}).join("");var l={type:e.type,content:a.stringify(e.content,t,r),tag:"span",classes:["token",e.type],attributes:{},language:t,parent:r};if("comment"==l.type&&(l.attributes.spellcheck="true"),e.alias){var i="Array"===n.util.type(e.alias)?e.alias:[e.alias];Array.prototype.push.apply(l.classes,i)}n.hooks.run("wrap",l);var o="";for(var s in l.attributes)o+=(o?" ":"")+s+'="'+(l.attributes[s]||"")+'"';return"<"+l.tag+' class="'+l.classes.join(" ")+'" '+o+">"+l.content+"</"+l.tag+">"},!_self.document)return _self.addEventListener?(_self.addEventListener("message",function(e){var t=JSON.parse(e.data),a=t.language,r=t.code,l=t.immediateClose;_self.postMessage(n.highlight(r,n.languages[a],a)),l&&_self.close()},!1),_self.Prism):_self.Prism;var r=document.currentScript||[].slice.call(document.getElementsByTagName("script")).pop();return r&&(n.filename=r.src,document.addEventListener&&!r.hasAttribute("data-manual")&&document.addEventListener("DOMContentLoaded",n.highlightAll)),_self.Prism}();"undefined"!=typeof module&&module.exports&&(module.exports=Prism),"undefined"!=typeof global&&(global.Prism=Prism);
+</script>
+
+<script type="text/javascript">
+Prism.languages.sql={comment:{pattern:/(^|[^\\])(?:\/\*[\w\W]*?\*\/|(?:--|\/\/|#).*)/,lookbehind:!0},string:{pattern:/(^|[^@\\])("|')(?:\\?[\s\S])*?\2/,lookbehind:!0},variable:/@[\w.$]+|@("|'|`)(?:\\?[\s\S])+?\1/,"function":/\b(?:COUNT|SUM|AVG|MIN|MAX|FIRST|LAST|UCASE|LCASE|MID|LEN|ROUND|NOW|FORMAT)(?=\s*\()/i,keyword:/\b(?:ACTION|ADD|AFTER|ALGORITHM|ALL|ALTER|ANALYZE|ANY|APPLY|AS|ASC|AUTHORIZATION|BACKUP|BDB|BEGIN|BERKELEYDB|BIGINT|BINARY|BIT|BLOB|BOOL|BOOLEAN|BREAK|BROWSE|BTREE|BULK|BY|CALL|CASCADED?|CASE|CHAIN|CHAR VARYING|CHARACTER (?:SET|VARYING)|CHARSET|CHECK|CHECKPOINT|CLOSE|CLUSTERED|COALESCE|COLLATE|COLUMN|COLUMNS|COMMENT|COMMIT|COMMITTED|COMPUTE|CONNECT|CONSISTENT|CONSTRAINT|CONTAINS|CONTAINSTABLE|CONTINUE|CONVERT|CREATE|CROSS|CURRENT(?:_DATE|_TIME|_TIMESTAMP|_USER)?|CURSOR|DATA(?:BASES?)?|DATETIME|DBCC|DEALLOCATE|DEC|DECIMAL|DECLARE|DEFAULT|DEFINER|DELAYED|DELETE|DENY|DESC|DESCRIBE|DETERMINISTIC|DISABLE|DISCARD|DISK|DISTINCT|DISTINCTROW|DISTRIBUTED|DO|DOUBLE(?: PRECISION)?|DROP|DUMMY|DUMP(?:FILE)?|DUPLICATE KEY|ELSE|ENABLE|ENCLOSED BY|END|ENGINE|ENUM|ERRLVL|ERRORS|ESCAPE(?:D BY)?|EXCEPT|EXEC(?:UTE)?|EXISTS|EXIT|EXPLAIN|EXTENDED|FETCH|FIELDS|FILE|FILLFACTOR|FIRST|FIXED|FLOAT|FOLLOWING|FOR(?: EACH ROW)?|FORCE|FOREIGN|FREETEXT(?:TABLE)?|FROM|FULL|FUNCTION|GEOMETRY(?:COLLECTION)?|GLOBAL|GOTO|GRANT|GROUP|HANDLER|HASH|HAVING|HOLDLOCK|IDENTITY(?:_INSERT|COL)?|IF|IGNORE|IMPORT|INDEX|INFILE|INNER|INNODB|INOUT|INSERT|INT|INTEGER|INTERSECT|INTO|INVOKER|ISOLATION LEVEL|JOIN|KEYS?|KILL|LANGUAGE SQL|LAST|LEFT|LIMIT|LINENO|LINES|LINESTRING|LOAD|LOCAL|LOCK|LONG(?:BLOB|TEXT)|MATCH(?:ED)?|MEDIUM(?:BLOB|INT|TEXT)|MERGE|MIDDLEINT|MODIFIES SQL DATA|MODIFY|MULTI(?:LINESTRING|POINT|POLYGON)|NATIONAL(?: CHAR VARYING| CHARACTER(?: VARYING)?| VARCHAR)?|NATURAL|NCHAR(?: VARCHAR)?|NEXT|NO(?: SQL|CHECK|CYCLE)?|NONCLUSTERED|NULLIF|NUMERIC|OFF?|OFFSETS?|ON|OPEN(?:DATASOURCE|QUERY|ROWSET)?|OPTIMIZE|OPTION(?:ALLY)?|ORDER|OUT(?:ER|FILE)?|OVER|PARTIAL|PARTITION|PERCENT|PIVOT|PLAN|POINT|POLYGON|PRECEDING|PRECISION|PREV|PRIMARY|PRINT|PRIVILEGES|PROC(?:EDURE)?|PUBLIC|PURGE|QUICK|RAISERROR|READ(?:S SQL DATA|TEXT)?|REAL|RECONFIGURE|REFERENCES|RELEASE|RENAME|REPEATABLE|REPLICATION|REQUIRE|RESTORE|RESTRICT|RETURNS?|REVOKE|RIGHT|ROLLBACK|ROUTINE|ROW(?:COUNT|GUIDCOL|S)?|RTREE|RULE|SAVE(?:POINT)?|SCHEMA|SELECT|SERIAL(?:IZABLE)?|SESSION(?:_USER)?|SET(?:USER)?|SHARE MODE|SHOW|SHUTDOWN|SIMPLE|SMALLINT|SNAPSHOT|SOME|SONAME|START(?:ING BY)?|STATISTICS|STATUS|STRIPED|SYSTEM_USER|TABLES?|TABLESPACE|TEMP(?:ORARY|TABLE)?|TERMINATED BY|TEXT(?:SIZE)?|THEN|TIMESTAMP|TINY(?:BLOB|INT|TEXT)|TOP?|TRAN(?:SACTIONS?)?|TRIGGER|TRUNCATE|TSEQUAL|TYPES?|UNBOUNDED|UNCOMMITTED|UNDEFINED|UNION|UNIQUE|UNPIVOT|UPDATE(?:TEXT)?|USAGE|USE|USER|USING|VALUES?|VAR(?:BINARY|CHAR|CHARACTER|YING)|VIEW|WAITFOR|WARNINGS|WHEN|WHERE|WHILE|WITH(?: ROLLUP|IN)?|WORK|WRITE(?:TEXT)?)\b/i,"boolean":/\b(?:TRUE|FALSE|NULL)\b/i,number:/\b-?(?:0x)?\d*\.?[\da-f]+\b/,operator:/[-+*\/=%^~]|&&?|\|?\||!=?|<(?:=>?|<|>)?|>[>=]?|\b(?:AND|BETWEEN|IN|LIKE|NOT|OR|IS|DIV|REGEXP|RLIKE|SOUNDS LIKE|XOR)\b/i,punctuation:/[;[\]()`,.]/};
+</script>
+
+<script type="text/javascript">
+Prism.languages.python={"triple-quoted-string":{pattern:/"""[\s\S]+?"""|'''[\s\S]+?'''/,alias:"string"},comment:{pattern:/(^|[^\\])#.*/,lookbehind:!0},string:/("|')(?:\\?.)*?\1/,"function":{pattern:/((?:^|\s)def[ \t]+)[a-zA-Z_][a-zA-Z0-9_]*(?=\()/g,lookbehind:!0},"class-name":{pattern:/(\bclass\s+)[a-z0-9_]+/i,lookbehind:!0},keyword:/\b(?:as|assert|async|await|break|class|continue|def|del|elif|else|except|exec|finally|for|from|global|if|import|in|is|lambda|pass|print|raise|return|try|while|with|yield)\b/,"boolean":/\b(?:True|False)\b/,number:/\b-?(?:0[bo])?(?:(?:\d|0x[\da-f])[\da-f]*\.?\d*|\.\d+)(?:e[+-]?\d+)?j?\b/i,operator:/[-+%=]=?|!=|\*\*?=?|\/\/?=?|<[<=>]?|>[=>]?|[&|^~]|\b(?:or|and|not)\b/,punctuation:/[{}[\];(),.:]/};
+</script>
+
+<script type="text/javascript">
+!function(){if("undefined"!=typeof self&&self.Prism&&self.document){var e={html:"HTML",xml:"XML",svg:"SVG",mathml:"MathML",css:"CSS",clike:"C-like",javascript:"JavaScript",abap:"ABAP",actionscript:"ActionScript",apacheconf:"Apache Configuration",apl:"APL",applescript:"AppleScript",asciidoc:"AsciiDoc",aspnet:"ASP.NET (C#)",autoit:"AutoIt",autohotkey:"AutoHotkey",basic:"BASIC",csharp:"C#",cpp:"C++",coffeescript:"CoffeeScript","css-extras":"CSS Extras",fsharp:"F#",glsl:"GLSL",http:"HTTP",inform7:"Inform 7",json:"JSON",latex:"LaTeX",lolcode:"LOLCODE",matlab:"MATLAB",mel:"MEL",nasm:"NASM",nginx:"nginx",nsis:"NSIS",objectivec:"Objective-C",ocaml:"OCaml",parigp:"PARI/GP",php:"PHP","php-extras":"PHP Extras",powershell:"PowerShell",jsx:"React JSX",rest:"reST (reStructuredText)",sas:"SAS",sass:"Sass (Sass)",scss:"Sass (Scss)",sql:"SQL",typescript:"TypeScript",vhdl:"VHDL",vim:"vim",wiki:"Wiki markup",yaml:"YAML"};Prism.hooks.add("before-highlight",function(s){var a=s.element.parentNode;if(a&&/pre/i.test(a.nodeName)){var t,i,r=a.getAttribute("data-language")||e[s.language]||s.language.substring(0,1).toUpperCase()+s.language.substring(1),l=a.previousSibling;l&&/\s*\bprism-show-language\b\s*/.test(l.className)&&l.firstChild&&/\s*\bprism-show-language-label\b\s*/.test(l.firstChild.className)?i=l.firstChild:(t=document.createElement("div"),i=document.createElement("div"),i.className="prism-show-language-label",t.className="prism-show-language",t.appendChild(i),a.parentNode.insertBefore(t,a)),i.innerHTML=r}})}}();
+</script>
 
 
 </body>
