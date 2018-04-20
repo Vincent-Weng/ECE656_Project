@@ -114,7 +114,11 @@
   
 \subsection{Group 2}
 
-    For the second type of user, they are different from casual users only by that they may leave reviews or tips on a business. They are logged-in users, so they can interact with other reviews or tips. Therefore, they are granted global \texttt{SELECT} privilege, \texttt{INSERT} on the review and tip table, \texttt{UPDATE} on certains columns in business table, and table-wise \texttt{UPDATE} on user table. The SQL query is shown as follows, similarly we call this \texttt{user2}:
+    For the second type of user, they are different from casual users in that they may leave reviews
+	or tips on a business. They are logged-in users, so they can interact with other reviews or tips.
+	Therefore, they are granted global \texttt{SELECT} privilege, \texttt{INSERT} on the review and
+	tip table, \texttt{UPDATE} on certain columns in the business table, and table-wise \texttt{UPDATE}
+	on user table. The SQL query is shown as follows, similarly we call this \texttt{user2}:
 
     \begin{verbatim}
       DROP USER IF EXISTS 'user2'@'%';
@@ -129,7 +133,9 @@
 
 \subsection{Group 3}
 
-    Business analysts are special casual users. Here we assume they are not logged in so they are not expected to change any contents in the database. Therefore, we only add some view-related privileges to this groups of user besides those granted to group 1:
+    Business analysts are special casual users. Here we assume they are not logged in so they are
+	not expected to change any contents in the database. Therefore, we only add some view-related
+	privileges to this group of users besides those granted to group 1:
 
     \begin{verbatim}
       DROP USER IF EXISTS 'user3'@'%';
@@ -139,7 +145,11 @@
 
 \subsection{Group 4}
 
-    Group 4 corresponds to normal developers. These people are in charge of the visiting, development and maintenance of database. Therefore we grant full IUD privileges on the whole database to them. Also, in case they need to perform automated operations, query optimization or concurrency control, we also grant them with view, routine(function, procedure), index and lock permissions. The SQL queries are as following:
+    Group 4 corresponds to normal developers. These people are in charge of the visiting, development
+	and maintenance of database. Therefore we grant them full IUD privileges on the whole database.
+	Also, in case they need to perform automated operations, query optimization or concurrency control,
+	we also grant them with view, routine(function, procedure), index and lock permissions. The SQL
+	queries are as follows:
 
     \begin{verbatim}
       DROP USER IF EXISTS 'user4'@'%';
@@ -153,7 +163,10 @@
 
 \subsection{Group 5}
     
-    Group 5 is the database administrator, so its privilege is all but \texttt{GRANT} and \texttt{PROXY} options, which should only be done using the root user. In practical use only these two operations should be done using root user in order to prevent abuse or unexpected threats to the database:
+    Group 5 is the database administrator, so its privilege is all but \texttt{GRANT} and
+	\texttt{PROXY} options, which should only be done using the root user.
+	In practical use only these two operations should be done using root user in order
+	to prevent abuse or unexpected threats to the database. The SQL queries are as follows:
 
     \begin{verbatim}
       DROP USER IF EXISTS 'user5'@'%';
