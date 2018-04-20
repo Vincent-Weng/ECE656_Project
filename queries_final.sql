@@ -7,7 +7,7 @@ WHERE
         OR UNIX_TIMESTAMP(date) >= UNIX_TIMESTAMP('2018-01-01');
 
 SELECT 
-    user.id, user.yelping_since, review.date
+    user.id
 FROM
     (user
     INNER JOIN review ON user.id = review.user_id)
@@ -16,9 +16,7 @@ WHERE
 GROUP BY user.id;
 
 SELECT 
-    user.id,
-    user.yelping_since AS Date_of_yelping,
-    elite_years.year AS Year_of_Elite
+    user.id
 FROM
     (user
     INNER JOIN elite_years ON user.id = elite_years.user_id)
