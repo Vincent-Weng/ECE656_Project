@@ -1,3 +1,11 @@
+## Introduction
+Every year Yelp releases their extensive dataset to the public to
+analyse and try to find interesting trends or draw new conclusions about
+their users or businesses listed on there. This provides us an ideal
+dataset to study and analyse for ECE656 since it is such a large and
+diverse dataset it means that there are several different conclusions
+that can be found and some potential irregularities in their database
+structure that we can improve upon. 
 
 ## Table of contents
 ### Part 0. General settings
@@ -6,9 +14,17 @@ This part explains the general running environment of this project and how the c
 * Part I - 1.1 Database structure
 	- To start we did a basic analysis of the database configuration, including sketching the Entity-Relationship Diagram and the relational model diagram.
 * Part I - 1.2 Data cleaning
-	- Sanity and consistency checks are performed in this part. The illegal data are removed from the database or updated. It also includes a comparion of sanity checking queries run time between indexed and unindexed database.
+	- Sanity and consistency checks are performed in this part to ensure
+that the data entered in the tables makes logical sense and doesn’t
+contain any erroneous entries. The illegal data are removed from the database or updated. It also includes a comparion of sanity checking queries run time between indexed and unindexed database.
 * Part I - 1.3 Data analysis
-	 - In this part we looked into the factors which affect the likelihood that a review is spam. Also, running time comparison is performed on the related analysis SQL queries.
+	 - For this part we
+analyse factors that increase the chance for a review to be spam or paid
+for to either raise or lower a business’ rating. This includes looking
+at how long a user too between creating their account and leaving a
+review as spammers will generally create many accounts and leave a
+positive or negative review immediately and then leave the account
+dormant. Also, running time comparison is performed on the related analysis SQL queries.
 
 ### Part II. User control
 Given 5 different groups of users, we determined the least permissions they need on the database to conduct their work, and finished the granting privilege queries on this yelp database.

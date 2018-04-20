@@ -5,12 +5,11 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>report</title>
+<title>README</title>
 
 
 <style type="text/css">
 .pagebreak { page-break-before: always; }
-
 @font-face {
     font-family: 'CM';
     src: local('CMU Serif')
@@ -271,13 +270,23 @@ div.prism-show-language > div.prism-show-language-label {
 
 <body>
 
-<h2 id="toc_0">Table of contents</h2>
+<h2 id="toc_0">Introduction</h2>
 
-<h3 id="toc_1">Part 0. General settings</h3>
+<p>Every year Yelp releases their extensive dataset to the public to
+analyse and try to find interesting trends or draw new conclusions about
+their users or businesses listed on there. This provides us an ideal
+dataset to study and analyse for ECE656 since it is such a large and
+diverse dataset it means that there are several different conclusions
+that can be found and some potential irregularities in their database
+structure that we can improve upon. </p>
+
+<h2 id="toc_1">Table of contents</h2>
+
+<h3 id="toc_2">Part 0. General settings</h3>
 
 <p>This part explains the general running environment of this project and how the codes are organized.</p>
 
-<h3 id="toc_2">Part I. Data processing</h3>
+<h3 id="toc_3">Part I. Data processing</h3>
 
 <ul>
 <li>Part I - 1.1 Database structure
@@ -288,20 +297,28 @@ div.prism-show-language > div.prism-show-language-label {
 <li>Part I - 1.2 Data cleaning
 
 <ul>
-<li>Sanity and consistency checks are performed in this part. The illegal data are removed from the database or updated. It also includes a comparion of sanity checking queries run time between indexed and unindexed database.</li>
+<li>Sanity and consistency checks are performed in this part to ensure
+that the data entered in the tables makes logical sense and doesn’t
+contain any erroneous entries. The illegal data are removed from the database or updated. It also includes a comparion of sanity checking queries run time between indexed and unindexed database.</li>
 </ul></li>
 <li>Part I - 1.3 Data analysis
 
 <ul>
-<li>In this part we looked into the factors which affect the likelihood that a review is spam. Also, running time comparison is performed on the related analysis SQL queries.</li>
+<li>For this part we
+analyse factors that increase the chance for a review to be spam or paid
+for to either raise or lower a business’ rating. This includes looking
+at how long a user too between creating their account and leaving a
+review as spammers will generally create many accounts and leave a
+positive or negative review immediately and then leave the account
+dormant. Also, running time comparison is performed on the related analysis SQL queries.</li>
 </ul></li>
 </ul>
 
-<h3 id="toc_3">Part II. User control</h3>
+<h3 id="toc_4">Part II. User control</h3>
 
 <p>Given 5 different groups of users, we determined the least permissions they need on the database to conduct their work, and finished the granting privilege queries on this yelp database.</p>
 
-<h2 class="pagebreak">Part 0. General settings</h2>
+<h2 class="pagebreak" id="toc_5">Part 0. General settings</h2>
 
 <p>This report is written in Jupyter Notebook, and all SQL queries are exectuted as python script. Therefore, it follows the sequence of code executing, and all codes share the same namespace. </p>
 
@@ -365,20 +382,20 @@ def executeQuery(conn, query, commit=False, returnResult=True):
 
 yelp_conn = open_conn()</code></pre></div>
 
-<h2 id="toc_5">Part I - 1.1 Database structure</h2>
+<h2 id="toc_6">Part I - 1.1 Database structure</h2>
 
 <p>Here is the Entity-Relationship diagram of the database. The attributes are not shown because there are too many for some of the tables. Instead, they can be find in the following figure illustrating the relational model.
 <div style="text-align:center">
-<img src="../../ER_Diagram.png" width="800">
+<img src="ER_Diagram.png" width="800">
 </div></p>
 
 <p>Here is the relational model of the database. Primary keys are marked as orange and foreign keys are marked as blue. Also the arrows indicate the reference relations between the tables.</p>
 
 <div style="text-align:center">
-<img src="../../RelationalModel.png" width="800">
+<img src="RelationalModel.png" width="800">
 </div>
 
-<h2 id="toc_6">Part I - 1.2 Data cleaning</h2>
+<h2 id="toc_7">Part I - 1.2 Data cleaning</h2>
 
 <p>First some sanity checks and consistency checks were performed on the yelp database. The data in the database should follow rules and should be consistent with each other. After studying the relationship models in of it, we perfomed the following checks and cleaning:
 - Logical time checks: review or becoming an elite member can not occur before yelp was founded or from the future. 
@@ -386,7 +403,7 @@ yelp_conn = open_conn()</code></pre></div>
 
 <p>We first got the queries ready, then came up with the following indices to accelerate the running of queries. As we are going to time the execution commands, they are added before further discussion, as shown in 1.2.1. After that in 1.2.2, we will introduce the checking queries and the measures taken to deal with the inconsistency and broken data. </p>
 
-<h3 id="toc_7">1.2.1 Indexing the sanity check queries</h3>
+<h3 id="toc_8">1.2.1 Indexing the sanity check queries</h3>
 
 <p>To allow for faster queries additional indices were added to some tables in the database. This includes:</p>
 
@@ -447,9 +464,9 @@ index_5_2 =  &quot;create index idx_opening_time on checkin_new(checkin_time)&qu
 executeQuery(yelp_conn, query_5_1)
 executeQuery(yelp_conn, query_5_2)</code></pre></div>
 
-<h3 id="toc_8">1.2.2 Sanity/consistency check and cleaning</h3>
+<h3 id="toc_9">1.2.2 Sanity/consistency check and cleaning</h3>
 
-<h4 id="toc_9">1. Check that no review is from the future or before Yelp&#39;s founding</h4>
+<h4 id="toc_10">1. Check that no review is from the future or before Yelp&#39;s founding</h4>
 
 <div><pre><code class="language-python">query_1 = &quot;SELECT id, date FROM review WHERE unix_timestamp(date) &lt;= unix_timestamp(&#39;2004-10-01&#39;)\
            OR unix_timestamp(date) &gt;= unix_timestamp(&#39;2018-01-01&#39;);&quot;
@@ -479,7 +496,7 @@ Wall time: 2.75 s
 
 executeQuery(yelp_conn, clean_1)</code></pre></div>
 
-<h4 id="toc_10">2. Can&#39;t leave a review dated before account creation</h4>
+<h4 id="toc_11">2. Can&#39;t leave a review dated before account creation</h4>
 
 <div><pre><code class="language-python">query_2 =  &quot;SELECT user.id, user.yelping_since, review.date\
             FROM (user INNER JOIN review ON user.id = review.user_id)\
@@ -522,7 +539,7 @@ displayResult(result_2[:5], heading_2)</code></pre></div>
 
 executeQuery(yelp_conn, clean_2)</code></pre></div>
 
-<h4 id="toc_11">3. Can&#39;t be elite in a year before their account was made</h4>
+<h4 id="toc_12">3. Can&#39;t be elite in a year before their account was made</h4>
 
 <div><pre><code class="language-python">query_3 =  &quot;SELECT user.id, user.yelping_since AS Date_of_yelping, elite_years.year AS Year_of_Elite\
             FROM (user INNER JOIN elite_years ON user.id = elite_years.user_id)\
@@ -551,7 +568,7 @@ displayResult(result_3[:5], heading_3)</code></pre></div>
 </tbody>
 </table>
 
-<h4 id="toc_12">4. Can&#39;t checkin outside open hours</h4>
+<h4 id="toc_13">4. Can&#39;t checkin outside open hours</h4>
 
 <div><pre><code class="language-python">query_4 = &quot;SELECT COUNT(*) FROM checkin JOIN (SELECT hours.business_id, SUBSTRING_INDEX(hours, &#39;|&#39;, 1)\
           AS day_of_week, SUBSTRING_INDEX(SUBSTRING_INDEX(hours, &#39;|&#39;, - 1), &#39;-&#39;, 1) AS opening_time,\
@@ -574,7 +591,7 @@ Wall time: 5min 14s
 
 <p>This also shows the need within the database for the date column in the checkin and the hours column in the hours table to be normalized by splitting into date, opening time and closing time columns as this would save computation time having to perform substring_index computations on every row. No change is made to the database to correct this because it may sometimes happen since the business may change its open hours without updating that on yelp.</p>
 
-<h4 id="toc_13">5. <code>User.review_count</code> cannot be less than the sum of the number of reviews by a user</h4>
+<h4 id="toc_14">5. <code>User.review_count</code> cannot be less than the sum of the number of reviews by a user</h4>
 
 <div><pre><code class="language-python">query_5 = &quot;select count(*) from user join (select count(user_id) as countedReviews, user_id from\
            review group by user_id) as a on a.user_id = user.id where a.countedReviews &gt; review_count;&quot;
@@ -601,7 +618,7 @@ clean_5_2 = &quot;UPDATE user SET review_count = (SELECT count\
 executeQuery(yelp_conn, clean_5_1)
 executeQuery(yelp_conn, clean_5_2)</code></pre></div>
 
-<h4 id="toc_14">6. Cannot be Elite in an invalid year</h4>
+<h4 id="toc_15">6. Cannot be Elite in an invalid year</h4>
 
 <p>Invalid years include ones before 2004, years in the future or years they didn&#39;t post a review, tip or photo.</p>
 
@@ -628,9 +645,9 @@ Wall time: 2min 23s
     
 executeQuery(yelp_conn, clean_6)</code></pre></div>
 
-<h2 id="toc_15">Part I - 1.3 Data Analysis</h2>
+<h2 id="toc_16">Part I - 1.3 Data Analysis</h2>
 
-<h3 id="toc_16">1.3.1 General results</h3>
+<h3 id="toc_17">1.3.1 General results</h3>
 
 <p>Conditions for determining which reviews are SPAM:<br>
 Accuracy with WHERE review<em>count = 1: 61%<br>
@@ -648,7 +665,7 @@ Change query to only include restaurants: 83%
 Change query to only include hotels: 85%
 Change query to only include restaurants: 85%</p>
 
-<h3 id="toc_17">1.3.2 Methods</h3>
+<h3 id="toc_18">1.3.2 Methods</h3>
 
 <p>Now that we&#39;re confident that the data is sufficiently cleaned as to not produce erroneous results from our analysis outside of those of interest, we can begin performing the actual analysis of trends in the data. The trend that was analyzed is the affect different attributes about users and their reviews have on the likelihood that their review is spam. These attributes include the type of business being reviewed, the ratings of the reviews left by users, the average<em>stars of the user, the time between account creation and  and the review</em>count of the user. In order to determine if a given query returns reviews that are spam a machine learning classifier was used that implemented a bag-of-words model and applied a naive Bayes and random forest classifier onto this model. The metric we looked at to determine the liklihood that a review is spam is the accuracy of the classifier in classifying the suspected spam reviews when mixed with reviews that are not spam.  </p>
 
@@ -666,27 +683,27 @@ The metrics analyzed were:</p>
 <li>number of results - the number of rows from each query that were analyzed, this was left fixed at 1000 for speed</li>
 </ul>
 
-<h3 id="toc_18">1.3.3 Results</h3>
+<h3 id="toc_19">1.3.3 Results</h3>
 
 <div style="text-align:center">
-<img src="../../pythonAnalysis/figures/1_review_stars.png" width="800">
+<img src="pythonAnalysis/figures/1_review_stars.png" width="800">
 </div>
 
 <p>It was found that the longer someone waited to leave their first review from account creation, the less likely it was to be spam. This was expected as any bot account that is created to simply boost up the score of a restaurant would leave a review immediately after creation, as opposed to a real user that may make their account and then not leave a review on a business until they go to one a while later. The downside of this metric is that there are also many real used that create account while at a business and leave an overly positive or negative review because its fresh in their memory.</p>
 
 <div style="text-align:center">
-<img src="../../pythonAnalysis/figures/categories.png" width="800">  
+<img src="pythonAnalysis/figures/categories.png" width="800">  
 </div>
 
 <p>Next, it was found that amoungst the different categories of businesses that Automotive businesses were the least likely to have spam reviews, while shopping locations were the most. Analyzing this further reveals that on average the automotive customers were more likely to have accounts with only one review for the automotive business, suggesting automotive people are less likely to be active users versus shopping locations which have legitimate users that are more active Yelp users so the ones with only one review are more likely to be spam.  </p>
 
 <div style="text-align:center">
-<img src="../../pythonAnalysis/figures/avg_stars.png" width="800">
+<img src="pythonAnalysis/figures/avg_stars.png" width="800">
 </div>
 
 <p>It was also found that the average<em>stars of the users&#39; account influences the likelihood that their reviews are spam in that if a users&#39; average</em>stars is 5 or 1 versus if their average_stars is some other value showing that they&#39;ve given other reviews besides just the top score or the lowest. This metric would miss spam users that use their account for spamming both high and low, instead of only doing one or the other.</p>
 
-<h3 id="toc_19">1.3.4 Future Work</h3>
+<h3 id="toc_20">1.3.4 Future Work</h3>
 
 <p>While classifiers for spam emails are quite well established, spam classifiers for reviews are more challenging because they lack many of the features that are indicative of spam such as including links or using language that suggests that the person is trying to sell something. However, this is an active area of research and there are other more complex features that have been identified that have been shown to indicate a review is spam such as: <a href="reference:%20http://www.aclweb.org/anthology/P14-1147">(reference)</a></p>
 
@@ -697,33 +714,33 @@ The metrics analyzed were:</p>
 <li>Checking for if there are many grammatical and spelling mistakes </li>
 </ul>
 
-<h3 id="toc_20">1.3.5 Timing analysis</h3>
+<h3 id="toc_21">1.3.5 Timing analysis</h3>
 
 <p>Here are the running time for the two sql queries used in the analysis part:</p>
 
 <div style="text-align:center">
-<img src="../../pythonAnalysis/figures/analysis_query_1_indexed.png" width="800">
+<img src="pythonAnalysis/figures/analysis_query_1_indexed.png" width="800">
 </div>
 
 <div style="text-align:center">
-<img src="../../pythonAnalysis/figures/analysis_query_2_indexed.png" width="800">
+<img src="pythonAnalysis/figures/analysis_query_2_indexed.png" width="800">
 </div>
 
 <p>And here are the time for not indexed database:</p>
 
 <div style="text-align:center">
-<img src="../../pythonAnalysis/figures/analysis_query_1.png" width="800">
+<img src="pythonAnalysis/figures/analysis_query_1.png" width="800">
 </div>
 
 <div style="text-align:center">
-<img src="../../pythonAnalysis/figures/analysis_query_2.png" width="800">
+<img src="pythonAnalysis/figures/analysis_query_2.png" width="800">
 </div>
 
 <p>It can be found that indexes speed the query execution up by amazingly at least 2000%. These two queries include long joining operations, which probably is the reason for such a huge improvement.</p>
 
-<h2 id="toc_21">Part II. 2.1 User control</h2>
+<h2 id="toc_22">Part II. 2.1 User control</h2>
 
-<h3 id="toc_22">2.1.1 Description of the problem</h3>
+<h3 id="toc_23">2.1.1 Description of the problem</h3>
 
 <p>In real applications, the Yelp database is expected to be visited by
 different groups of people, including customers (users), data analyst
@@ -996,7 +1013,7 @@ group.</p>
  </tr>
 </table>
 
-<h3 id="toc_23">2.1.2 Group 1</h3>
+<h3 id="toc_24">2.1.2 Group 1</h3>
 
 <p>For the first group of users, they only browse information about the
 business, including their opening hours, stars, reviews, without signing
@@ -1013,7 +1030,7 @@ user, which we call <code>user1</code>:</p>
 CREATE USER user1;
 GRANT SELECT ON yelp_db.* TO &#39;user1&#39;;</code></pre></div>
 
-<h3 id="toc_24">2.1.3 Group 2</h3>
+<h3 id="toc_25">2.1.3 Group 2</h3>
 
 <p>For the second type of user, they are different from casual users in
 that they may leave reviews or tips on a business. They are logged-in
@@ -1032,7 +1049,7 @@ GRANT UPDATE (stars) ON yelp_db.business TO &#39;user2&#39;;
 GRANT UPDATE (review_count) ON yelp_db.business TO &#39;user2&#39;;
 GRANT UPDATE ON yelp_db.user TO &#39;user2&#39;;</code></pre></div>
 
-<h3 id="toc_25">2.1.4 Group 3</h3>
+<h3 id="toc_26">2.1.4 Group 3</h3>
 
 <p>Business analysts are special casual users. Here we assume they are not
 logged in so they are not expected to change any contents in the
@@ -1043,7 +1060,7 @@ group of users besides those granted to group 1:</p>
 CREATE USER user3;
 GRANT SELECT, CREATE VIEW, SHOW VIEW ON yelp_db.* TO &#39;user3&#39;;</code></pre></div>
 
-<h3 id="toc_26">2.1.5 Group 4</h3>
+<h3 id="toc_27">2.1.5 Group 4</h3>
 
 <p>Group 4 corresponds to normal developers. These people are in charge of
 the visiting, development and maintenance of database. Therefore we
@@ -1060,7 +1077,7 @@ CREATE, ALTER, INDEX, REFERENCES, # tables, indexes and keys
 DELETE, DROP, INSERT, SELECT, UPDATE # basic operations including IUD
 ON yelp_db.* TO &#39;user4&#39;;</code></pre></div>
 
-<h3 id="toc_27">2.1.6 Group 5</h3>
+<h3 id="toc_28">2.1.6 Group 5</h3>
 
 <p>Group 5 is the database administrator, so its privilege is all but
 <code>GRANT</code> and <code>PROXY</code> options, which should only be done using the root
