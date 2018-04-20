@@ -31,16 +31,27 @@
 % COPY START
 \section{Part 2}
 \subsection{Description of the problem}
-    In real applications, the Yelp database is expected to be visited by different group of people, including customers (users), data analyst (special users), and developers. In this project, this is further divided into five catagories:
+    In real applications, the Yelp database is expected to be visited by different groups of people,
+	including customers (users), data analyst (special users), and developers. In this project, this
+	is further divided into five categories:
     \begin{enumerate}
-      \item A casual user who uses the application to browse search results. These users do not need to have an account; hence, they cannot submit reviews.
-      \item Critiques that use the application to browse results just like the casual user, but they also leave reviews for places they visit. A logged in user should only be provided enough priv- ileges to write the review.
-      \item Business analysts can use the application to produce sales reports and may want to do special data mining and analysis. They cannot perform IUD (Insert/Update/Delete) opera- tions on the database but should have access to creating extra views on the database schema.
-      \item Developers working with this database are able to create new tables and perform data cleaning and indexing. They are allowed to perform IUD operations on the database.
+      \item A casual user who uses the application to browse search results. These users do not need
+		to have an account; hence, they cannot submit reviews.
+      \item Critiques that use the application to browse results just like the casual user, but they
+		also leave reviews for places they visit. A logged in user should only be provided enough
+		privileges to write the review.
+      \item Business analysts can use the application to produce sales reports and may want to do
+		special data mining and analysis. They cannot perform IUD (Insert/Update/Delete) operations on
+		the database but should have access to creating extra views on the database schema.
+      \item Developers working with this database are able to create new tables and perform data
+		cleaning and indexing. They are allowed to perform IUD operations on the database.
       \item The database admin who has full access over the database.
     \end{enumerate} 
 
-    The principle of granting privilege is to guarantee that each group of people have sufficient permission in order to pretect the database. First, the list of all privileges in MySQL 5.7 are listed in Table \ref{tab:privileges}, from which we can choose levels for each user group\footnote{https://dev.mysql.com/doc/refman/5.7/en/grant.html}. 
+    The principle of granting privilege is to guarantee that each group of people have sufficient
+	permission in order to protect the database. First, the list of all privileges in MySQL 5.7 are
+	listed in Table \ref{tab:privileges}, from which we can choose levels for each user
+	group\footnote{https://dev.mysql.com/doc/refman/5.7/en/grant.html}. 
 
 
 \begin{table}
@@ -87,7 +98,13 @@
   \end{table}%
 
 \subsection{Group 1}
-    For the first group of users, they only browse information about business, including their opening hours, stars, review, without signing in so they are normally not expected to write information into the database. In some cases, if the app allows some specific types of anonymous communications, such as marking a review as ``cool" or ``useful'' by a visitor, permission of making few modification on the number of these tags may be granted. However, in this project we assume that the user are not allowed to perform any operations except exploring. Hereby we only grant \texttt{SELECT} privilege to the first group of user, which we call \texttt{user1}:
+    For the first group of users, they only browse information about the business, including their
+	opening hours, stars, reviews, without signing in so they do not need to write information into
+	the database. In some cases, if the app allows some specific types of anonymous communications,
+	such as marking a review as ``cool" or ``useful'' by a visitor, then the permission should be
+	extended to allow for modification of the count of these tags. However, in this project we
+	assume that the user are not allowed to perform any operations except exploring. Hereby we only
+	grant \texttt{SELECT} privilege to the first group of user, which we call \texttt{user1}:
 
     \begin{verbatim}
       DROP USER IF EXISTS 'user1'@'%';

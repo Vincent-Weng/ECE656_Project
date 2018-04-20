@@ -6,15 +6,25 @@ WHERE
     UNIX_TIMESTAMP(date) <= UNIX_TIMESTAMP('2004-10-01')
         OR UNIX_TIMESTAMP(date) >= UNIX_TIMESTAMP('2018-01-01');
 
-SELECT user.id, user.yelping_since, review.date
-            FROM (user INNER JOIN review ON user.id = review.user_id)
-            WHERE user.yelping_since > review.date
-            GROUP BY user.id;
+SELECT 
+    user.id, user.yelping_since, review.date
+FROM
+    (user
+    INNER JOIN review ON user.id = review.user_id)
+WHERE
+    user.yelping_since > review.date
+GROUP BY user.id;
 
-SELECT user.id, user.yelping_since AS Date_of_yelping, elite_years.year AS Year_of_Elite
-            FROM (user INNER JOIN elite_years ON user.id = elite_years.user_id)
-            WHERE YEAR(user.yelping_since) > elite_years.year
-            GROUP BY user.id;
+SELECT 
+    user.id,
+    user.yelping_since AS Date_of_yelping,
+    elite_years.year AS Year_of_Elite
+FROM
+    (user
+    INNER JOIN elite_years ON user.id = elite_years.user_id)
+WHERE
+    YEAR(user.yelping_since) > elite_years.year
+GROUP BY user.id;
             
 SELECT 
     count(*)
