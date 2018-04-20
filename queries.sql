@@ -50,7 +50,7 @@ create table hours_new(
     ,closing_time time
     );
     
-drop procedure dowhile_hours;
+drop procedure if exists dowhile_hours;
 delimiter //
 create procedure dowhile_hours ()
 begin declare v1 int default 821044;
@@ -61,8 +61,6 @@ end while;
 end//
 delimiter ;
    
-
-
 call dowhile_hours();
 
 update hours_new set day_of_week = (
@@ -78,7 +76,14 @@ create index idx_day_of_week on hours_new(day_of_week);
 create index idx_opening_time on hours_new(opening_time);
 create index idx_closing_time on hours_new(closing_time);
 
-drop procedure dowhile_checkin;
+create table checkin_new(
+	id int(11) not null auto_increment, primary key (id)
+    ,business_id varchar(255)
+    ,day_of_week varchar(9)
+    ,checkin_time time
+    );
+
+drop procedure if exists dowhile_checkin;
 delimiter //
 create procedure dowhile_checkin()
 begin declare v1 int default 3891600;
